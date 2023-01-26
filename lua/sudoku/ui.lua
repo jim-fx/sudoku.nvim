@@ -14,25 +14,10 @@ local function highlightLine(game, group, y, x1, x2)
     return
   end
 
-  local _x1 = 0;
-  local _x2 = 0;
-  local i = 0;
-  for word in line:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
-    i = i + 1
-    if i <= x1 then
-      _x1 = _x1 + string.len(word);
-      _x2 = _x1;
-    elseif i < x2 + 1 and x2 ~= -1 then
-      _x2 = _x2 + string.len(word);
-    else
-      break;
-    end
-  end
-  if x2 == -1 then
-    _x2 = -1
-  end
+  local _x1 = vim.str_byteindex(line, x1, false);
+  local _x2 = vim.str_byteindex(line, x2, false);
 
-  vim.api.nvim_buf_add_highlight(0, game.ns, group, y, _x1, _x2)
+  vim.api.nvim_buf_add_highlight(game.bufnr, game.ns, group, y, _x1, _x2)
 
 end
 
