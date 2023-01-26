@@ -1,4 +1,5 @@
 local sudoku = require("sudoku.sudoku")
+local util = require("sudoku.util")
 
 local M = {}
 
@@ -104,9 +105,18 @@ M.checkBoardValid = function(board)
 
       if rowCellValue and rowCellValue ~= 0 then
         if rowSet[rowCellValue] == false then
+
+          for k = 1, 9 do
+            local cell = board.rows[i][k];
+            local cValue = getCellValue(cell);
+            if cValue == colCellValue and cValue ~= 0 then
+              cell.__invalid = true
+              table.insert(cell.errors, "row")
+            end
+          end
+
           valid = false
           rowCell.__invalid = true
-          print("row invalid", rowCellValue, i, j);
           table.insert(rowCell.errors, "row")
         end
         rowSet[rowCellValue] = false
@@ -114,9 +124,17 @@ M.checkBoardValid = function(board)
 
       if colCellValue and colCellValue ~= 0 then
         if colSet[colCellValue] == false then
+          for k = 1, 9 do
+            local cell = board.cols[i][k];
+            local cValue = getCellValue(cell);
+            if cValue == colCellValue and cValue ~= 0 then
+              cell.__invalid = true
+              table.insert(cell.errors, "col")
+            end
+          end
+
           valid = false
           colCell.__invalid = true
-          print("col invalid", colCellValue, i, j);
           table.insert(colCell.errors, "col")
         end
         colSet[colCellValue] = false
@@ -124,9 +142,18 @@ M.checkBoardValid = function(board)
 
       if squareCellValue and squareCellValue ~= 0 then
         if squareSet[squareCellValue] == false then
+
+          for k = 1, 9 do
+            local cell = board.squares[i][k];
+            local cValue = getCellValue(cell);
+            if cValue == colCellValue and cValue ~= 0 then
+              cell.__invalid = true
+              table.insert(cell.errors, "square")
+            end
+          end
+
           valid = false
           squareCell.__invalid = true
-          print("square invalid", squareCellValue, i, j);
           table.insert(squareCell.errors, "square")
         end
         squareSet[squareCellValue] = false
@@ -193,9 +220,23 @@ M.setupSquare = function(board, cx, cy)
   board.squares[(cy - 1) * 3 + cx] = cells
 end
 
-M.resetBoard = function(board)
+M.getCursorCell = function(game)
+  local x, y = util.getPos();
+  return M.getCell(game.board, x + 1, y + 1);
+end
 
-  board.startTime = os.time()
+M.createNewBoard = function(game)
+
+  local board = {
+    cells = {},
+    squares = {},
+    rows = {},
+    cols = {},
+    tips = 0,
+    startTime = os.time(),
+    difficulty = game.settings.difficulty,
+  }
+
   for y = 1, 3 do
     for x = 1, 3 do
       M.setupSquare(board, x, y)
@@ -203,30 +244,27 @@ M.resetBoard = function(board)
   end
 
   local numbers = sudoku.createBoard()
-  local hidden = sudoku.hideBoard(numbers, 45)
+
+  local hidden = {}
+
+  if board.difficulty == 1 then
+    hidden = sudoku.hideBoard(numbers, 35)
+  elseif board.difficulty == 2 then
+    hidden = sudoku.hideBoard(numbers, 45)
+  elseif board.difficulty == 3 then
+    hidden = sudoku.hideBoard(numbers, 55)
+  end
+
   for i = 1, 81 do
     local cell = board.cells[i]
     cell.number = numbers[i]
     cell.show = hidden[i] ~= 0;
   end
 
-  return board
-end
+  game.board = board
+  table.insert(game.boards, board)
 
-M.setupBoard = function(bufnr)
-  local board = {
-    cells = {},
-    squares = {},
-    rows = {},
-    cols = {},
-    startTime = os.time(),
-    difficulty = 60,
-    state = "normal",
-    viewState = "normal",
-    bufnr = bufnr,
-  }
-
-  return M.resetBoard(board)
+  return board;
 end
 
 return M

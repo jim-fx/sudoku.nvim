@@ -1,15 +1,9 @@
-local core = require("sudoku.core")
-local ui = require("sudoku.ui")
+local game = require("sudoku.game")
+
 local M = {}
 
 local function createNewSudoku()
-
-  local buf = ui.setupBuffer();
-
-  local board = core.setupBoard(buf)
-  ui.render(board)
-  ui.setupEvents(board);
-
+  game.init();
 end
 
 M.setup = function()
