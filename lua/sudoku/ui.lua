@@ -15,7 +15,11 @@ local function highlightLine(game, group, y, x1, x2)
   end
 
   local _x1 = vim.str_byteindex(line, x1, false);
-  local _x2 = vim.str_byteindex(line, x2, false);
+
+  local _x2 = x2;
+  if x2 ~= -1 then
+    _x2 = vim.str_byteindex(line, x2, false);
+  end
 
   vim.api.nvim_buf_add_highlight(game.bufnr, game.ns, group, y, _x1, _x2)
 
@@ -70,7 +74,7 @@ local function drawHelp()
     "3. Each 3x3 box must contain the numbers 1-9",
     "",
     "Keymappings:",
-    "[g1..g9] -> Insert a number",
+    "[r1..r9] -> Insert a number",
     "[x]    -> Clear a cell",
     "[gr]   -> Start a new game",
     "[gh]   -> Show help",
@@ -153,8 +157,14 @@ M.render = function(game)
 
   local lines = renderer.renderBoard(board);
   local isValid = core.checkBoardValid(board) and "valid" or "invalid";
+  local missingCells = core.totalMissingCells(board);
+  local isWon = missingCells == 0;
 
-  if game.viewState == "normal" then
+  if isWon then
+    lines = util.tableConcat(lines, drawWin(game));
+  end
+
+  if game.viewState == "normal" and not isWon then
     if game.settings.showNumbersLeft then
       util.tableConcat(lines, drawNumbersLeft(game))
     end
@@ -182,17 +192,13 @@ M.render = function(game)
     end
   end
 
-  local missingCells = core.totalMissingCells(board);
-  if missingCells == 0 then
-    lines = util.tableConcat(lines, drawWin(game));
-  end
 
   if game.viewState == "tip" then
 
     local tipCell = nil;
     for i = 1, 81 do
       local cell = board.cells[i]
-      if cell.set == 0 then
+      if cell.tip then
         tipCell = cell;
         break;
       end
@@ -200,6 +206,8 @@ M.render = function(game)
 
     if tipCell ~= nil then
       lines = util.tableConcat(lines, { "There is only one possible number", "that fits in the highlighted cell." });
+    else
+      lines = util.tableConcat(lines, { "Could not find a tip" });
     end
 
   end
@@ -227,7 +235,7 @@ M.render = function(game)
     local cell = core.getCell(board, x + 1, y + 1);
     if cell ~= nil then
 
-      local cellLine = "cell: " .. cell.number or cell.set;
+      local cellLine = "cell: " .. (cell.number or cell.set) .. "show: " .. (cell.show and "true" or "false");
 
 
       if cell.errors ~= nil then
@@ -278,17 +286,6 @@ M.highlight = function(game)
   local board = game.board;
   nvim.nvim_buf_clear_namespace(game.bufnr, game.ns, 0, -1)
 
-  vim.cmd("hi SudokuBoard guifg=#8a8a8a")
-  vim.cmd("hi SudokuNumber ctermfg=white ctermbg=black guifg=white guibg=black")
-  vim.cmd("hi SudokuActiveMenu gui=bold")
-  vim.cmd("hi SudokuHintCell ctermbg=yellow guibg=yellow")
-  vim.cmd("hi SudokuSquare guibg=#292b35 guifg=#ffffff");
-  vim.cmd("hi SudokuColumn guibg=#14151a guifg=#d5d5d5");
-  vim.cmd("hi SudokuRow guibg=#14151a guifg=#d5d5d5");
-  vim.cmd("hi SudokuSettingsDisabled gui=italic guifg=#8e8e8e");
-  vim.cmd("hi SudokuSameNumber gui=bold guifg=white");
-  vim.cmd("hi SudokuError guibg=#843434");
-
   local x, y = util.getPos();
 
   local cy = vim.fn.line(".")
@@ -296,6 +293,18 @@ M.highlight = function(game)
 
   local sett = game.settings;
 
+
+  -- highlight pre-generated numbers
+  for i = 1, 81 do
+    local cell = board.cells[i]
+    if cell.show == false and cell.set ~= 0 then
+      local sx, sy = core.indexToScreenPosition(i);
+      highlightLine(game, "SudokuSetNumber", sy, sx, sx + 1);
+    end
+  end
+
+
+  -- highlight all squares
   if sett.highlight.enabled then
     for i = 1, 9 do
       for j = 1, 3 do
@@ -305,6 +314,7 @@ M.highlight = function(game)
       end
     end
   end
+
 
   -- highlight side buttons
   if game.viewState ~= "normal" then
@@ -333,21 +343,6 @@ M.highlight = function(game)
     end
   end
 
-  -- highlight cell if tip
-  if game.viewState == "tip" then
-    for i = 1, 81 do
-      local cell = board.cells[i]
-      if cell.tip then
-        local _cx, _cy = core.indexToPosition(i);
-        local sx = _cx * 2 + math.floor((_cx - 1) / 3) * 2;
-        local sy = _cy + math.floor((_cy / 4));
-        if sy == 8 then
-          sy = 9
-        end
-        highlightLine(game, "SudokuHintCell", sy, sx, sx + 1);
-      end
-    end
-  end
 
 
   -- highlight current row
@@ -361,12 +356,7 @@ M.highlight = function(game)
     for i = 1, 81 do
       local cell = board.cells[i]
       if cell.__invalid then
-        local _cx, _cy = core.indexToPosition(i);
-        local sx = _cx * 2 + math.floor((_cx - 1) / 3) * 2;
-        local sy = _cy + math.floor((_cy / 4));
-        if sy == 8 then
-          sy = 9
-        end
+        local sx, sy = core.indexToScreenPosition(i);
         highlightLine(game, "SudokuError", sy, sx, sx + 1);
       end
     end
@@ -390,13 +380,7 @@ M.highlight = function(game)
           local c = board.cells[i]
           local cellValueMatches = cellValue == (c.show and c.number or c.set);
           if cellValueMatches then
-            local _cx, _cy = core.indexToPosition(i);
-            local sx = _cx * 2 + math.floor((_cx - 1) / 3) * 2;
-            local sy = _cy + math.floor((_cy / 4));
-            if sy == 8 then
-              -- no idea why this is needed
-              sy = 9
-            end
+            local sx, sy = core.indexToScreenPosition(i);
             highlightLine(game, "SudokuSameNumber", sy, sx, sx + 1);
           end
         end
@@ -416,6 +400,16 @@ M.highlight = function(game)
     end
   end
 
+  -- highlight cell if tip
+  if game.viewState == "tip" then
+    for i = 1, 81 do
+      local cell = board.cells[i]
+      if cell.tip then
+        local sx, sy = core.indexToScreenPosition(i);
+        highlightLine(game, "SudokuHintCell", sy, sx, sx + 1);
+      end
+    end
+  end
 
 end
 

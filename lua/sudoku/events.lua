@@ -8,7 +8,7 @@ local nvim = vim.api;
 
 local function handleDelete(game)
   local x, y = util.getPos()
-  if x ~= -1 and y ~= -1 then
+  if x ~= -1 and y ~= -1 and x ~= nil and y ~= nil then
     core.clearCell(game.board, x + 1, y + 1)
     ui.render(game)
   end
@@ -114,9 +114,6 @@ local function handleRestart(game)
 end
 
 M.setup = function(game)
-  vim.keymap.set({ "n" }, "x", function()
-    handleDelete(game)
-  end, { buffer = game.bufnr, desc = "Clear single sudoku cell" })
 
   vim.keymap.set({ "n" }, "+", function()
     handleIncrement(game, 1)
@@ -129,10 +126,12 @@ M.setup = function(game)
   vim.keymap.set({ "n" }, "gh", function()
     game.viewState = (game.viewState == "help") and "normal" or "help"
     ui.render(game)
+    settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Show sudoku help" })
 
   vim.keymap.set({ "n" }, "gr", function()
     handleRestart(game)
+    settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
 
   vim.keymap.set({ "n" }, "gd3b", function()
@@ -166,6 +165,7 @@ M.setup = function(game)
   vim.keymap.set({ "n" }, "gz", function()
     game.viewState = (game.viewState == "zen") and "normal" or "zen";
     ui.render(game)
+    settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
   vim.keymap.set({ "n" }, "gs", function()
@@ -177,11 +177,13 @@ M.setup = function(game)
     if game.viewState == "settings" then
       settings.handleToggleSetting(game)
     end
+    handleDelete(game)
+
     ui.render(game)
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
   for i = 1, 9 do
-    vim.keymap.set({ "n" }, "g" .. tostring(i), function()
+    vim.keymap.set({ "n" }, "r" .. tostring(i), function()
       handleInsert(game, i)
     end, { buffer = game.bufnr, desc = "Insert " .. i .. " into sudoku" })
   end

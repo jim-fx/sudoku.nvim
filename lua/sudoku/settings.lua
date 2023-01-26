@@ -1,8 +1,72 @@
 local M = {}
 
 local function drawCheckBox(bool)
-  return bool and "[x]" or "[ ]"
+  return bool and "☒" or "☐"
 end
+
+local open = io.open
+local function read_file(path)
+  local file = open(path, "r") -- r read mode and b binary mode
+  if not file then return nil end
+  local content = file:read "*a" -- *a or *all reads the whole file
+  file:close()
+  return content
+end
+
+local function write_file(path, content)
+  local file = open(path, "w")
+  if not file then return nil end
+  file:write(content)
+  file:close()
+  return content
+end
+
+M.writeSettings = function(game)
+  local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
+
+  local safeFile = {
+    viewState = game.viewState,
+    settings = game.settings,
+  }
+
+  write_file(settingsFilePath, vim.json.encode(safeFile))
+end
+
+M.readSettings = function(game)
+
+  local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
+  local content = read_file(settingsFilePath);
+  if not content then
+    return
+  end
+
+  local safeFile = vim.json.decode(content);
+
+  if safeFile == nil or safeFile == vim.NIL then
+    return
+  end
+
+  local settings = safeFile.settings;
+  if settings ~= nil then
+    game.settings.showNumbersLeft = settings.showNumbersLeft and true or false;
+    game.settings.showCandidates = settings.showCandidates and true or false;
+    game.settings.highlight.enabled = settings.highlight.enabled and true or false;
+    game.settings.highlight.row = settings.highlight.row and true or false;
+    game.settings.highlight.column = settings.highlight.column and true or false;
+    game.settings.highlight.square = settings.highlight.square and true or false;
+    game.settings.highlight.errors = settings.highlight.errors and true or false;
+    game.settings.highlight.sameNumber = settings.highlight.sameNumber and true or false;
+    game.settings.difficulty = settings.difficulty and settings.difficulty or 1;
+  end
+
+  local viewState = safeFile.viewState;
+  if viewState then
+    game.viewState = safeFile.viewState;
+  end
+
+end
+
+
 
 M.drawSettings = function(game)
 
@@ -85,8 +149,7 @@ M.handleToggleSetting = function(game)
     game.settings.highlight.sameNumber = not game.settings.highlight.sameNumber
   end
 
-
-
+  M.writeSettings(game)
 end
 
 return M

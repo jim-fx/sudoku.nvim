@@ -1,6 +1,7 @@
 local core = require("sudoku.core");
 local ui = require("sudoku.ui");
 local events = require("sudoku.events");
+local settings = require("sudoku.settings");
 local M = {}
 
 M.init = function()
@@ -29,6 +30,8 @@ M.init = function()
       difficulty = 1
     }
   };
+
+  settings.readSettings(game);
 
   core.createNewBoard(game)
 

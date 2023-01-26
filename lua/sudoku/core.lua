@@ -15,6 +15,17 @@ M.indexToPosition = function(index)
   return (index - 1) % 9 + 1, math.floor((index - 1) / 9) + 1
 end
 
+M.indexToScreenPosition = function(index)
+  local _cx, _cy = M.indexToPosition(index);
+  local sx = _cx * 2 + math.floor((_cx - 1) / 3) * 2;
+  local sy = _cy + math.floor((_cy / 4));
+  if sy == 8 then
+    -- no idea why this is needed
+    sy = 9
+  end
+  return sx, sy
+end
+
 M.setCell = function(board, x, y, number)
 
   local cellIndex = M.positionToIndex(x, y);
