@@ -24,10 +24,12 @@ M.renderBoard = function(board)
       elseif board.viewState == "entropy" then
         line = line .. cell.entropy .. " "
       else
-        if cell.show and cell.number ~= 0 then
+        if cell.show then
           line = line .. cell.number .. " "
-        else
+        elseif cell.set ~= 0 and cell.set ~= nil then
           line = line .. (cell.set and cell.set or "∙") .. " "
+        else
+          line = line .. "∙ "
         end
       end
 

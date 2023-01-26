@@ -5,14 +5,75 @@ local nvim = vim.api
 
 local M = {}
 
-M.drawUI = function(board)
-  local lines = {
-    "╭───────────┬─────────┬───────╮",
-    "│ [R]estart │ [C]lose │ [T]ip │",
-    "╰───────────┴─────────┴───────╯",
+local function drawWin(board)
+
+  local endTime = os.time()
+  local diff = os.difftime(endTime, board.startTime);
+
+  return {
+    "You have solved the Sudoku!",
+    "Time: " .. string.format("%.2d:%.2d:%.2d", diff / (60 * 60), diff / 60 % 60, diff % 60),
   }
+end
+
+local function drawUI(board)
+
+  local viewState = board.viewState;
+  local lines = {
+    "",
+    " Sudoku",
+    "╭───────────────╮",
+    "│ [gr] restart " .. (viewState == "restart" and "-" or " ") .. "│",
+    " ├───────────────┤",
+    "│ [gh] help    " .. (viewState == "help" and "-" or " ") .. "│",
+    "├───────────────┤",
+    "│ [gt] tip      │",
+    " ├───────────────┤",
+    "│ [gs] settings" .. (viewState == "settings" and "-" or " ") .. "│",
+    "╰───────────────╯"
+  }
+  -- ╭───────┬───────┬───────╮
+  -- ├───────┼───────┼───────┤
 
   return lines
+end
+
+local function drawSettings()
+  return {
+    "-- Settings --",
+  }
+end
+
+local function drawHelp()
+  return {
+    "Sudoku Rules: ",
+    "1. Each row must contain the numbers 1-9",
+    "2. Each column must contain the numbers 1-9",
+    "3. Each 3x3 box must contain the numbers 1-9",
+    "",
+    "Keymappings:",
+    "[1..9] -> Insert a number",
+    "[x]    -> Clear a cell",
+    "[gr]   -> Restart the game",
+    "[gh]   -> Show help",
+    "[gt]   -> Show a tip",
+  }
+end
+
+local function drawRestart(board)
+
+  local changedCells = 0;
+  for i = 1, 81 do
+    local cell = board.cells[i]
+    if cell.set ~= 0 then
+      changedCells = changedCells + 1
+    end
+  end
+
+  return {
+    "You have changed " .. changedCells .. " cells, are you sure you want to reset?",
+    "[y]es [n]o"
+  }
 end
 
 M.getPos = function()
@@ -33,42 +94,92 @@ M.getPos = function()
     fy = fy - math.floor(fy / 4)
   end
 
+  if fx > 8 then
+    fx = -1
+  end
+
+  if fy > 8 then
+    fy = -1
+  end
+
   return fx, fy
 end
 
 M.render = function(board)
-  local lines = util.tableConcat(renderer.renderBoard(board), M.drawUI(board))
+  local lines = renderer.renderBoard(board)
 
-  local isValid = core.checkBoardValid(board) and "valid" or "invalid"
+  local ui = drawUI(board)
+  for i = 1, #ui do
+    lines[i] = lines[i] .. "" .. ui[i]
+  end
 
-  lines = util.tableConcat(lines, { "Board is " .. isValid })
-  util.tableConcat(lines, { "TotalEntropy: " .. core.calculateBoardEntropy(board) })
+  local isValid = core.checkBoardValid(board) and "valid" or "invalid";
+  local missingCells = core.totalMissingCells(board);
 
-  local x, y = M.getPos();
-  lines = util.tableConcat(lines, { "x: " .. x .. " y: " .. y });
+  if missingCells == 0 then
+    lines = util.tableConcat(lines, drawWin(board));
+  end
 
-  lines = util.tableConcat(lines, { "viewState: " .. board.viewState .. " state: " .. board.state });
+  if false then
+    lines = util.tableConcat(lines, { "Board is " .. isValid });
+    lines = util.tableConcat(lines, { "Missing cells: " .. missingCells });
 
-  if x ~= -1 and y ~= -1 then
+    local x, y = M.getPos();
+    lines = util.tableConcat(lines, { "Cursor x: " .. x + 1 .. " y: " .. y + 1 });
+
     local cell = core.getCell(board, x + 1, y + 1);
     if cell ~= nil then
 
-      local candidates = cell.candidates;
-      local candidateLine = "";
-      for i = 1, 9 do
-        candidateLine = candidateLine .. (candidates[i] == true and i or "x") .. " "
+      local cellLine = "cell: " .. cell.number or cell.set;
+
+
+      if cell.errors ~= nil then
+        for key, value in pairs(cell.errors) do
+          cellLine = cellLine .. " " .. value
+        end
       end
-      candidateLine = "Candidates: " .. candidateLine .. " #" .. util.tableLength(candidates)
-      lines = util.tableConcat(lines, { candidateLine });
+
+      lines = util.tableConcat(lines, { cellLine });
+
     end
+
+    lines = util.tableConcat(lines, { "viewState: " .. board.viewState .. " state: " .. board.state });
+
+    if x ~= -1 and y ~= -1 then
+      local cell = core.getCell(board, x + 1, y + 1);
+      if cell ~= nil then
+
+        local candidates = cell.candidates;
+        local candidateLine = "";
+        for i = 1, 9 do
+          candidateLine = candidateLine .. (candidates[i] == true and i or "x") .. " "
+        end
+        candidateLine = "Candidates: " .. candidateLine .. " #" .. util.tableLength(candidates)
+        lines = util.tableConcat(lines, { candidateLine });
+      end
+    end
+
   end
 
+  if board.viewState == "restart" then
+    lines = util.tableConcat(lines, drawRestart(board));
+  end
+
+
+  if board.viewState == "help" then
+    lines = util.tableConcat(lines, drawHelp(board));
+  end
+
+  if board.viewState == "settings" then
+    lines = util.tableConcat(lines, drawSettings(board));
+  end
 
   nvim.nvim_buf_set_option(board.bufnr, "modifiable", true)
   nvim.nvim_buf_set_lines(board.bufnr, 0, -1, false, lines)
   nvim.nvim_buf_set_option(board.bufnr, "modifiable", false)
 
   -- M.highlight(board)
+  -- M.highlightLine(board)
 end
 
 M.setupBuffer = function()
@@ -92,7 +203,7 @@ end
 
 local function handleClear(board)
   for i = 1, 81 do
-    board.cells[i].set = nil
+    board.cells[i].set = 0
     board.cells[i].show = false
     board.cells[i].candidates = {}
     board.cells[i].number = 0
@@ -107,18 +218,6 @@ local function handleInsert(board, number)
   else
     print("Invalid position " .. x .. "," .. y)
   end
-end
-
-local function handleToggleResult(board)
-  if board.viewState == "normal" then
-    board.viewState = "result"
-  elseif board.viewState == "result" then
-    board.viewState = "entropy"
-  elseif board.viewState == "entropy" then
-    board.viewState = "normal"
-  end
-
-  M.render(board)
 end
 
 local function handleFill(board, num)
@@ -151,24 +250,38 @@ local function handleIncrement(board, number)
 end
 
 local ns = vim.api.nvim_create_namespace("my_namespace")
+-- vim.cmd("hi SameNumber gui=italic guibg=#440000")
 
-vim.cmd("hi SameNumber gui=italic guibg=#440000")
+M.highlightLine = function(board)
+
+  vim.api.nvim_buf_clear_namespace(board.bufnr, ns, 0, -1)
+
+  local x, y = M.getPos();
+
+  local cy = vim.fn.line(".")
+  local cx = vim.fn.virtcol(".")
+
+  for iy = 1, 11 do
+    nvim.nvim_buf_set_extmark(board.bufnr, ns, iy, cx, { end_col = cx + 5, hl_group = "Visual" })
+  end
+
+  -- print("x: " .. x .. " y: " .. y)
+end
+
 M.highlight = function(board)
-  -- vim.cmd("hi SameNumber gui=bold")
 
   local x, y = M.getPos();
 
   local cy = vim.fn.line(".")
   local cx = vim.fn.col(".")
 
+  -- highlight current row
   if y ~= -1 then
-    -- highlight row
-    -- nvim.nvim_buf_add_highlight(board.bufnr, ns, "Visual", cy - 1, 2, 48)
-    vim.highlight.range(board.bufnr, ns, "Visual", { cy - 1, 2 }, { cy - 1, 48 }, { inclusive = true, regtype = "b" })
+    vim.highlight.range(board.bufnr, ns, "Visual", { cy - 1, 3 }, { cy - 1, 48 }, { inclusive = true, regtype = "b" })
   end
 
+  -- highlight square
   if y ~= -1 then
-    -- highlight square
     local fx = math.floor((vim.fn.virtcol(".") - 3) / 2)
     fx = fx - math.floor((fx + 1) / 4)
     local sx = math.floor(fx / 3) * 16 + 3;
@@ -192,34 +305,51 @@ M.highlight = function(board)
 
     -- highlight same numbers
     local cell = core.getCell(board, x + 1, y + 1)
-    if cell.set ~= nil then
+    local cellValue = cell.set or cell.number;
+    if cellValue ~= nil and cellValue ~= 0 then
+      print("Highlight: " .. cellValue)
+      for i = 1, 81 do
+        local _cx, _cy = core.indexToPosition(i);
+        local c = core.getCell(board, _cx, _cy)
+        local cellValueMatches = cellValue == (c.set or c.number);
+        if cellValueMatches then
+          -- print(i .. " " .. _cx .. " " .. _cy)
+          local sx = (_cx - 1) * 3 + 2 - math.floor(x / 3);
+          local sy = (_cy + 1) + math.floor((_cy) / 4) - 1;
+          vim.highlight.range(board.bufnr, ns, "Visual", { sy, sx }, { sy, sx + 1 },
+            { reqtype = "", priority = 60000 })
+        end
+      end
     end
 
   end
 
+end
+
+local function handleRestart(board)
+
+  local changedCells = 0;
   for i = 1, 81 do
-    local _cx, _cy = core.indexToPosition(i);
-    local c = core.getCell(board, _cx, _cy)
-    if c.set == 8 then
-      -- print(i .. " " .. _cx .. " " .. _cy)
-      local sx = (_cx - 1) * 3 + 2 - math.floor(x / 3);
-      local sy = (_cy + 1) + math.floor((_cy) / 4) - 1;
-      vim.highlight.range(board.bufnr, ns, "SameNumber", { sy, sx }, { sy, sx + 1 },
-        { reqtype = "", priority = 60000 })
+    local cell = board.cells[i]
+    if cell.set ~= 0 then
+      changedCells = changedCells + 1
     end
   end
 
+  if board.viewState == "restart" or changedCells == 0 then
+    core.resetBoard(board)
+    board.viewState = "normal"
+  else
+    board.viewState = "restart"
+  end
 
+  M.render(board)
 end
 
 M.setupEvents = function(board)
   vim.keymap.set({ "n" }, "x", function()
     handleDelete(board)
-  end, { buffer = board.bufnr })
-
-  vim.keymap.set({ "n" }, "t", function()
-    handleToggleResult(board)
-  end, { buffer = board.bufnr })
+  end, { buffer = board.bufnr, desc = "Clear single sudoku cell" })
 
   vim.keymap.set({ "n" }, "+", function()
     handleIncrement(board, 1)
@@ -229,26 +359,42 @@ M.setupEvents = function(board)
     handleIncrement(board, -1)
   end, { buffer = board.bufnr })
 
-  vim.keymap.set({ "n" }, "r", function()
-    core.resetBoard(board)
+  vim.keymap.set({ "n" }, "gh", function()
+    board.viewState = (board.viewState == "help") and "normal" or "help"
     M.render(board)
-  end, { buffer = board.bufnr })
+  end, { buffer = board.bufnr, desc = "Show sudoku help" })
 
-  vim.keymap.set({ "n" }, "c", function()
+  vim.keymap.set({ "n" }, "gr", function()
+    handleRestart(board)
+  end, { buffer = board.bufnr, desc = "Start a new sudoku board" })
+
+  vim.keymap.set({ "n" }, "n", function()
+    if board.viewState == "restart" then
+      board.viewState = "normal"
+      M.render(board)
+    end
+  end, { buffer = board.bufnr, desc = "Start a new sudoku board" })
+
+  vim.keymap.set({ "n" }, "y", function()
+    if board.viewState == "restart" then
+      handleRestart(board)
+    end
+  end, { buffer = board.bufnr, desc = "Start a new sudoku board" })
+
+  vim.keymap.set({ "n" }, "gc", function()
     handleClear(board)
     M.render(board)
-  end, { buffer = board.bufnr })
+  end, { buffer = board.bufnr, desc = "Clear Sudoku board" })
+
+  vim.keymap.set({ "n" }, "gs", function()
+    board.viewState = (board.viewState == "settings") and "normal" or "settings"
+    M.render(board)
+  end, { buffer = board.bufnr, desc = "Clear Sudoku board" })
 
   for i = 1, 9 do
-    vim.keymap.set({ "n" }, "r" .. tostring(i), function()
+    vim.keymap.set({ "n" }, tostring(i), function()
       handleInsert(board, i)
-    end, { buffer = board.bufnr })
-  end
-
-  for i = 1, 9 do
-    vim.keymap.set({ "n" }, "f" .. tostring(i), function()
-      handleFill(board, i)
-    end, { buffer = board.bufnr })
+    end, { buffer = board.bufnr, desc = "Insert " .. i .. " into sudoku" })
   end
 
   nvim.nvim_create_autocmd("CursorMoved", {
