@@ -42,6 +42,12 @@ local function handleInsert(game, number)
   end
 end
 
+local function setViewState(game, state)
+  game.viewState = (game.viewState == state) and "normal" or state;
+  ui.render(game)
+  settings.writeSettings(game);
+end
+
 local function handleIncrement(game, number)
 
   local cell = core.getCursorCell(game)
@@ -113,7 +119,44 @@ local function handleRestart(game)
   ui.render(game)
 end
 
+local function handleMouseClick(game)
+  local mousePos = vim.fn.getmousepos();
+  local winId = mousePos.winid
+
+
+  if game.viewState == "normal" then
+    if mousePos.line == 14 then
+      handleInsert(game, math.floor(mousePos.column / 2) + 1);
+      -- vim.notify("Num: " .. math.floor(mousePos.column / 2) + 1);
+      return;
+    end
+  end
+
+  nvim.nvim_win_set_cursor(winId, { mousePos.line, mousePos.column })
+
+  if mousePos.column > 42 then
+    if mousePos.screenrow == 4 then
+      handleRestart(game)
+    elseif mousePos.screenrow == 6 then
+      setViewState(game, "help")
+    elseif mousePos.screenrow == 8 then
+      setViewState(game, "tip")
+    elseif mousePos.screenrow == 10 then
+      setViewState(game, "settings")
+    end
+  end
+
+  if game.viewState == "settings" then
+    settings.handleToggleSetting(game)
+  end
+
+end
+
 M.setup = function(game)
+
+  nvim.nvim_buf_create_user_command(game.bufnr, "Sudoku", function()
+    print("Sudoku command")
+  end, {});
 
   vim.keymap.set({ "n" }, "+", function()
     handleIncrement(game, 1)
@@ -133,6 +176,14 @@ M.setup = function(game)
     handleRestart(game)
     settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
+
+  vim.keymap.set({ "n" }, "<LeftMouse>", function()
+    handleMouseClick(game)
+  end, { buffer = game.bufnr, desc = "Insert 1" })
+
+  -- vim.keymap.set({ "n" }, "<LeftRelease>", function()
+  --   handleMouseClick(game)
+  -- end, { buffer = game.bufnr, desc = "Insert 1" })
 
   vim.keymap.set({ "n" }, "gd3b", function()
     game.__debug = not game.__debug
@@ -163,14 +214,11 @@ M.setup = function(game)
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
   vim.keymap.set({ "n" }, "gz", function()
-    game.viewState = (game.viewState == "zen") and "normal" or "zen";
-    ui.render(game)
-    settings.writeSettings(game);
+    setViewState(game, "zen")
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
   vim.keymap.set({ "n" }, "gs", function()
-    game.viewState = (game.viewState == "settings") and "normal" or "settings"
-    ui.render(game)
+    setViewState(game, "settings");
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
   vim.keymap.set({ "n" }, "x", function()
@@ -178,7 +226,6 @@ M.setup = function(game)
       settings.handleToggleSetting(game)
     end
     handleDelete(game)
-
     ui.render(game)
   end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
 
