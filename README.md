@@ -36,7 +36,7 @@ Install with <code><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></c
 ## Screenshots
 |                                                                                                                                                        |                                                                                                                                                  |                                                                                                                                        |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------: |
-|           <img alt="Main window" src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_04.jpg?token=GHSAT0AAAAAAB52IBTQZVJIYPGRMPJN36BSY6WZLDQ">           |                 <img src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_05.jpg?token=GHSAT0AAAAAAB52IBTRW7KDPHCXGN7KBK2IY6WZOIQ">                 | |
+|           <img alt="Main window" src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_04.jpg?token=GHSAT0AAAAAAB52IBTRRLS6ZBKVEY2RZ6LAY6XHWVA">           |                 <img src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_05.jpg?token=GHSAT0AAAAAAB52IBTQ4D3JRBENMU4MHFHIY6XHWVA">                 | |
 
 ## Configuration
 
