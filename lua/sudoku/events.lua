@@ -24,7 +24,6 @@ M.actions = {
   "view_tip"
 }
 
-
 ---@param game Game
 local function handleDelete(game)
   local x, y = util.getPos()
@@ -59,7 +58,6 @@ local function handleInsert(game, number)
       game.viewState = "normal"
     end
     cell.set = number
-
 
     ui.render(game)
   else
@@ -130,7 +128,7 @@ local function handleShowTip(game)
 end
 
 ---@param game Game
-local function handleRestart(game)
+local function handleNewGame(game)
 
   local changedCells = 0;
   for i = 1, 81 do
@@ -140,11 +138,11 @@ local function handleRestart(game)
     end
   end
 
-  if game.viewState == "restart" or changedCells == 0 then
+  if game.viewState == "new" or changedCells == 0 then
     core.createNewBoard(game)
     game.viewState = "normal"
   else
-    game.viewState = "restart"
+    game.viewState = "new"
   end
 
   ui.render(game)
@@ -170,7 +168,7 @@ local function handleMouseClick(game)
 
   if mousePos.column > 42 then
     if mousePos.screenrow == 4 then
-      handleRestart(game)
+      handleNewGame(game)
     elseif mousePos.screenrow == 6 then
       setViewState(game, "help")
     elseif mousePos.screenrow == 8 then
@@ -207,7 +205,7 @@ M.setup = function(game)
   end, { buffer = game.bufnr, desc = "Show sudoku help" })
 
   vim.keymap.set({ "n" }, "gr", function()
-    handleRestart(game)
+    handleNewGame(game)
     settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
 
@@ -233,7 +231,7 @@ M.setup = function(game)
 
   vim.keymap.set({ "n" }, "r", function()
     if game.viewState == "restart" then
-      handleRestart(game)
+      handleNewGame(game)
     end
   end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
 

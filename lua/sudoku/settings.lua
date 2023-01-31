@@ -1,5 +1,6 @@
 local options = require "sudoku.options"
-local M = {}
+local fs      = require "sudoku.fs"
+local M       = {}
 
 ---@class HighlighSettings
 ---@field enabled boolean
@@ -12,6 +13,7 @@ local M = {}
 ---@class Settings
 ---@field showNumbersLeft boolean
 ---@field showCandidates boolean
+---@field showInvalidBoard boolean
 ---@field difficulty number
 ---@field highlight HighlighSettings
 
@@ -19,45 +21,27 @@ local function drawCheckBox(bool)
   return bool and "☒" or "☐"
 end
 
-local open = io.open
-local function read_file(path)
-  local file = open(path, "r") -- r read mode and b binary mode
-  if not file then return nil end
-  local content = file:read "*a" -- *a or *all reads the whole file
-  file:close()
-  return content
-end
-
-local function write_file(path, content)
-  local file = open(path, "w")
-  if not file then return nil end
-  file:write(content)
-  file:close()
-  return content
-end
-
 ---@param game Game
 M.writeSettings = function(game)
 
   if not options.get("persist_settings") then return end
 
-  local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
-
-  local safeFile = {
+  local saveFile = {
     viewState = game.viewState,
     settings = game.settings,
   }
 
-  write_file(settingsFilePath, vim.json.encode(safeFile))
+  fs.write("settings.json", saveFile);
 end
 
----@param game Game
 ---@return Settings
-M.readSettings = function(game)
+M.readSettings = function()
 
+  ---@type Settings
   local defaultSettings = {
     showNumbersLeft = false,
     showCandidates = false,
+    showInvalidBoard = true,
     highlight = {
       enabled = true,
       row = true,
@@ -74,19 +58,12 @@ M.readSettings = function(game)
     return defaultSettings
   end
 
-  local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
-  local content = read_file(settingsFilePath);
-  if not content then
+  local saveFile = fs.read("settings.json");
+  if not saveFile then
     return defaultSettings
   end
 
-  local safeFile = vim.json.decode(content);
-
-  if safeFile == nil or safeFile == vim.NIL then
-    return defaultSettings
-  end
-
-  local settings = safeFile.settings;
+  local settings = saveFile.settings;
   if settings ~= nil then
     defaultSettings.showNumbersLeft = settings.showNumbersLeft and true or false;
     defaultSettings.showCandidates = settings.showCandidates and true or false;
@@ -99,15 +76,9 @@ M.readSettings = function(game)
     defaultSettings.difficulty = settings.difficulty and settings.difficulty or 1;
   end
 
-  local viewState = safeFile.viewState;
-  if viewState then
-    game.viewState = safeFile.viewState;
-  end
-
   return defaultSettings
 
 end
-
 
 ---@param game Game
 ---@return table

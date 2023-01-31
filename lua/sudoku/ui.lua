@@ -1,8 +1,10 @@
 local renderer = require("sudoku.renderer")
-local util = require("sudoku.util")
-local core = require("sudoku.core")
+local util     = require("sudoku.util")
+local core     = require("sudoku.core")
 local settings = require("sudoku.settings")
-local nvim = vim.api
+local history  = require("sudoku.history")
+local options  = require("sudoku.options")
+local nvim     = vim.api
 
 local M = {}
 
@@ -12,6 +14,7 @@ local M = {}
 ---| '"help"' # Normal view state'
 ---| '"settings"' # Normal view state'
 ---| '"restart"' # Normal view state'
+---| '"new"' # Normal view state'
 ---| '"zen"' # Normal view state'
 
 ---@param game Game
@@ -88,24 +91,25 @@ end
 
 local function drawHelp()
   return {
-    "Sudoku Rules: ",
+    "Sudoku Rules",
     "1. Each row must contain the numbers 1-9",
     "2. Each column must contain the numbers 1-9",
     "3. Each 3x3 box must contain the numbers 1-9",
     "",
-    "Keymappings:",
+    "Keymappings",
     "[r1..r9] -> Insert a number",
-    "[x]    -> Clear a cell",
-    "[gr]   -> Start a new game",
-    "[gh]   -> Show help",
-    "[gt]   -> Show a tip",
-    "[gs]   -> Show settings",
-    "[gc]   -> Clear board",
-    "[gz]   -> Zen Mode"
+    "[x]      -> Clear a cell",
+    "[gn]     -> Start a new game",
+    "[gr]     -> Restart the game",
+    "[gh]     -> Show help",
+    "[gt]     -> Show a tip",
+    "[gs]     -> Show settings",
+    "[gc]     -> Clear board",
+    "[gz]     -> Zen Mode"
   }
 end
 
-local function drawRestart(game)
+local function drawNewGame(game)
 
   local board = game.board;
 
@@ -119,8 +123,8 @@ local function drawRestart(game)
 
   return {
     "You have changed " .. changedCells .. " cell" ..
-        (changedCells > 1 and "s" or "") .. ", are you sure you want to reset?",
-    "[r]estart [n]o"
+        (changedCells > 1 and "s" or "") .. ", are you sure you want to start a new game?",
+    "[n]ew [c]ancel"
   }
 end
 
@@ -180,19 +184,20 @@ M.render = function(game)
 
   local lines = renderer.renderBoard(board);
   local isValid = core.checkBoardValid(board) and "valid" or "invalid";
-  local missingCells = core.totalMissingCells(board);
-  local isWon = missingCells == 0;
 
-  if isWon then
+  if board.finished then
     if board.endTime == nil then
       board.endTime = os.time()
+      if options.get("persist_games") then
+        history.saveBoard(game.board)
+      end
     end
     if game.viewState == "normal" then
       lines = util.tableConcat(lines, drawWin(game));
     end
   end
 
-  if game.viewState == "normal" and not isWon then
+  if game.viewState == "normal" and not board.finished then
     if game.settings.showNumbersLeft then
       util.tableConcat(lines, drawNumbersLeft(game))
     end
@@ -241,8 +246,8 @@ M.render = function(game)
   end
 
 
-  if game.viewState == "restart" then
-    lines = util.tableConcat(lines, drawRestart(game));
+  if game.viewState == "new" then
+    lines = util.tableConcat(lines, drawNewGame(game));
   end
 
   if game.viewState == "help" then
@@ -255,7 +260,6 @@ M.render = function(game)
 
   if game.__debug then
     lines = util.tableConcat(lines, { "Board is " .. isValid });
-    lines = util.tableConcat(lines, { "Missing cells: " .. missingCells });
 
     local x, y = util.getPos();
     lines = util.tableConcat(lines, { "Cursor x: " .. x + 1 .. " y: " .. y + 1 });

@@ -16,6 +16,7 @@ local M = {}
 ---@field __squareSet number[]
 
 ---@class Board
+---@field finished boolean
 ---@field cells Cell[]
 ---@field squares Cell[][]
 ---@field rows Cell[][]
@@ -93,6 +94,14 @@ end
 
 ---@param board Board
 M.checkBoardValid = function(board)
+
+
+  local missingCells = M.totalMissingCells(board);
+  local isWon = missingCells == 0;
+  if isWon then
+    board.finished = true
+  end
+
   for i = 1, 81 do
     board.cells[i].__invalid = false
     board.cells[i].errors = {}
@@ -209,10 +218,52 @@ M.getCursorCell = function(game)
   return M.getCell(game.board, x + 1, y + 1);
 end
 
+
+local function setupSquare(board, cx, cy)
+  local cells = {}
+
+  for i = 1, 9 do
+    -- coordinates relative to square
+    local x = (i - 1) % 3
+    local y = math.floor((i - 1) / 3)
+
+    -- coordinates relative to grid
+    local gx = (cx - 1) * 3 + x + 1
+    local gy = (cy - 1) * 3 + y + 1
+
+    -- global index
+    local index = M.positionToIndex(gx, gy)
+
+    local cell = {
+      number = 0,
+      set = 0,
+      show = false,
+      candidates = {},
+      entropy = 9,
+    }
+
+    if board.rows[gy] == nil then
+      board.rows[gy] = {}
+    end
+    board.rows[gy][gx] = cell
+
+    if board.cols[gx] == nil then
+      board.cols[gx] = {}
+    end
+    board.cols[gx][gy] = cell
+
+    board.cells[index] = cell
+    cells[i] = cell
+  end
+
+  board.squares[(cy - 1) * 3 + cx] = cells
+end
+
 M.createNewBoard = function(game)
 
   ---@type Board
   local board = {
+    finished = false,
     cells = {},
     squares = {},
     rows = {},
@@ -221,6 +272,12 @@ M.createNewBoard = function(game)
     startTime = os.time(),
     difficulty = game.settings.difficulty,
   }
+
+  for y = 1, 3 do
+    for x = 1, 3 do
+      setupSquare(board, x, y)
+    end
+  end
 
   local numbers = sudoku.createBoard()
 
@@ -238,7 +295,6 @@ M.createNewBoard = function(game)
     cell.number = numbers[i]
     cell.show = hidden[i] ~= 0;
   end
-
   game.board = board
   table.insert(game.boards, board)
 

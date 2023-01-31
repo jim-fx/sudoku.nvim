@@ -1,12 +1,12 @@
 ---@class Options
 ---@field persist_settings boolean
----@field persist_highscores boolean
+---@field persist_games boolean
 ---@field default_mappings boolean
 ---@field mappings { key: string, action: actions }
 
 local default_options = {
   persist_settings = true,
-  persist_highscores = true,
+  persist_games = true,
   default_mappings = true
 };
 

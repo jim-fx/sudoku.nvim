@@ -25,22 +25,8 @@ M.init = function()
     board = nil,
     viewState = "normal",
     boards = {},
-    settings = {
-      showNumbersLeft = false,
-      showCandidates = false,
-      highlight = {
-        enabled = true,
-        row = true,
-        column = true,
-        square = true,
-        errors = false,
-        sameNumber = true
-      },
-      difficulty = 1
-    }
+    settings = settings.readSettings()
   };
-
-  settings.readSettings(game);
 
   core.createNewBoard(game)
 
