@@ -8,8 +8,6 @@
     <br />Now presenting: <a href="https://github.com/jim-fx/sudoku.nvim"><code>sudoku.nvim</code></a>
 </p>
 
-# Table of Contents
-
 -   [Installation](#installation)
 -   [Screenshots](#screenshots)
 -   [Configuration](#configuration)
@@ -43,6 +41,7 @@ Install with <code><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></c
 -- These are the defaults for the settings
 require("sudoku").setup({
   persist_settings = true, -- safe the settings under vim.fn.stdpath("data"), usually ~/.local/share/nvim,
+  persist_games = true, -- persist a history of all played games
   default_mappings = true, -- if set to false you need to set your own,
 })
 ```
