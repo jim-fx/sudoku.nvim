@@ -122,17 +122,20 @@ end
 local function handleMouseClick(game)
   local mousePos = vim.fn.getmousepos();
   local winId = mousePos.winid
+  local col = mousePos.column
+  local row = mousePos.line
+
 
 
   if game.viewState == "normal" then
     if mousePos.line == 14 then
-      handleInsert(game, math.floor(mousePos.column / 2) + 1);
+      handleInsert(game, math.floor(col / 2) + 1);
       -- vim.notify("Num: " .. math.floor(mousePos.column / 2) + 1);
       return;
     end
   end
 
-  nvim.nvim_win_set_cursor(winId, { mousePos.line, mousePos.column })
+  nvim.nvim_win_set_cursor(winId, { row, col })
 
   if mousePos.column > 42 then
     if mousePos.screenrow == 4 then

@@ -4,11 +4,11 @@ local events = require("sudoku.events");
 local settings = require("sudoku.settings");
 local M = {}
 
+local namespace = vim.api.nvim_create_namespace("jim-fx/sudoku.nvim");
+
 M.init = function()
 
   local buf = ui.setupBuffer();
-
-  local namespace = vim.api.nvim_create_namespace("jim-fx/sudoku.nvim");
 
   local game = {
     bufnr = buf,

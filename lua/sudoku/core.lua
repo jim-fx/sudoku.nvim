@@ -37,7 +37,7 @@ M.setCell = function(board, x, y, number)
 end
 
 M.clearCell = function(board, x, y)
-  board.cells[M.positionToIndex(x, y)].set = nil
+  board.cells[M.positionToIndex(x, y)].set = 0;
 end
 
 M.boardToNumbers = function(board)

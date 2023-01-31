@@ -29,8 +29,7 @@ local function drawWin(game)
 
   local board = game.board;
 
-  local endTime = os.time()
-  local diff = os.difftime(endTime, board.startTime);
+  local diff = os.difftime(board.endTime, board.startTime);
   local difficulty = {
     "easy",
     "medium",
@@ -135,17 +134,19 @@ local function drawNumbersLeft(game)
 
   for i = 1, 81 do
     local cell = board.cells[i]
-    local cellValue = cell.show and cell.number or cell.set;
+    local cellValue = cell.set ~= 0 and cell.set or (cell.show and cell.number or 0);
     if cellValue ~= 0 then
       numbersLeft[cellValue] = numbersLeft[cellValue] - 1
     end
   end
 
-  local numbersLeftStr = "Numbers left: "
+  local numbersLeftStr = ""
 
   for i = 1, 9 do
     if numbersLeft[i] ~= 0 then
       numbersLeftStr = "" .. numbersLeftStr .. "" .. i .. " "
+    else
+      numbersLeftStr = "" .. numbersLeftStr .. "x "
     end
   end
 
@@ -161,7 +162,12 @@ M.render = function(game)
   local isWon = missingCells == 0;
 
   if isWon then
-    lines = util.tableConcat(lines, drawWin(game));
+    if board.endTime == nil then
+      board.endTime = os.time()
+    end
+    if game.viewState == "normal" then
+      lines = util.tableConcat(lines, drawWin(game));
+    end
   end
 
   if game.viewState == "normal" and not isWon then
@@ -269,6 +275,20 @@ M.render = function(game)
   M.highlight(game)
 end
 
+M.createHighlightGroups = function()
+  vim.cmd("hi SudokuBoard guifg=#7d7d7d")
+  vim.cmd("hi SudokuNumber ctermfg=white ctermbg=black guifg=white guibg=black")
+  vim.cmd("hi SudokuActiveMenu gui=bold")
+  vim.cmd("hi SudokuHintCell ctermbg=yellow guibg=yellow")
+  vim.cmd("hi SudokuSquare guibg=#292b35 guifg=#ffffff");
+  vim.cmd("hi SudokuColumn guibg=#14151a guifg=#d5d5d5");
+  vim.cmd("hi SudokuRow guibg=#14151a guifg=#d5d5d5");
+  vim.cmd("hi SudokuSettingsDisabled gui=italic guifg=#8e8e8e");
+  vim.cmd("hi SudokuSameNumber gui=bold guifg=white");
+  vim.cmd("hi SudokuSetNumber gui=italic guifg=white");
+  vim.cmd("hi SudokuError guibg=#843434");
+end
+
 M.setupBuffer = function()
   -- Create new empty buffer
   local buf = nvim.nvim_call_function("bufnr", { "Sudoku" })
@@ -277,11 +297,14 @@ M.setupBuffer = function()
   end
   nvim.nvim_buf_set_name(buf, "Sudoku")
   nvim.nvim_set_current_buf(buf)
+  vim.bo[buf].filetype = "sudoku";
   return buf
 end
 
 
 M.highlight = function(game)
+
+  M.createHighlightGroups();
 
   local board = game.board;
   nvim.nvim_buf_clear_namespace(game.bufnr, game.ns, 0, -1)
@@ -346,7 +369,7 @@ M.highlight = function(game)
 
 
   -- highlight current row
-  if y ~= -1 and sett.highlight.enabled and sett.highlight.row then
+  if y ~= -1 and cx < 25 and sett.highlight.enabled and sett.highlight.row then
     highlightLine(game, "SudokuRow", cy - 1, 1, 24);
   end
 
