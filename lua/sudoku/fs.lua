@@ -2,6 +2,9 @@ local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim/";
 
 local open = io.open
 local function read_file(path)
+
+  print("Reading: ", path);
+
   local file = open(path, "r") -- r read mode and b binary mode
   if not file then return nil end
   local content = file:read "*a" -- *a or *all reads the whole file
@@ -13,7 +16,7 @@ local function read_file(path)
     return nil
   end
 
-  return content
+  return jsonData
 end
 
 local function write_file(path, data)

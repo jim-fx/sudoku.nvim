@@ -76,7 +76,7 @@ local function drawUI(game)
     "",
     " Sudoku",
     "╭───────────────╮",
-    "│ [gr] restart " .. (viewState == "restart" and "-" or " ") .. "│",
+    "│ [gn] new     " .. (viewState == "restart" and "-" or " ") .. "│",
     " ├───────────────┤",
     "│ [gh] help    " .. (viewState == "help" and "-" or " ") .. "│",
     "├───────────────┤",
@@ -384,7 +384,7 @@ M.highlight = function(game)
     if game.viewState == "help" then
       highlightLine(game, "SudokuActiveMenu", 5, 27, 42);
     end
-    if game.viewState == "restart" then
+    if game.viewState == "new" then
       highlightLine(game, "SudokuActiveMenu", 3, 27, 42);
     end
     if game.viewState == "tip" then

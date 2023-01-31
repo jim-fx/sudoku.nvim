@@ -39,7 +39,7 @@ M.readSettings = function()
 
   ---@type Settings
   local defaultSettings = {
-    showNumbersLeft = false,
+    showNumbersLeft = true,
     showCandidates = false,
     showInvalidBoard = true,
     highlight = {
@@ -47,7 +47,7 @@ M.readSettings = function()
       row = true,
       column = true,
       square = true,
-      errors = false,
+      errors = true,
       sameNumber = true
     },
     difficulty = 1
@@ -93,6 +93,7 @@ M.drawSettings = function(game)
     "   " .. drawCheckBox(settings.difficulty == 1) .. " Easy",
     "   " .. drawCheckBox(settings.difficulty == 2) .. " Medium",
     "   " .. drawCheckBox(settings.difficulty == 3) .. " Hard",
+    "   " .. drawCheckBox(settings.difficulty == 4) .. " Impossible",
     drawCheckBox(settings.showNumbersLeft) .. " Show which numbers are left",
     drawCheckBox(settings.showCandidates) .. " Show candidates for a cell",
     drawCheckBox(high.enabled) .. " Highlighting",
@@ -125,40 +126,43 @@ M.handleToggleSetting = function(game)
   if y == 18 then
     game.settings.difficulty = 3;
   end
-
   if y == 19 then
-    game.settings.showNumbersLeft = not game.settings.showNumbersLeft
+    game.settings.difficulty = 4;
   end
 
   if y == 20 then
-    game.settings.showCandidates = not game.settings.showCandidates
+    game.settings.showNumbersLeft = not game.settings.showNumbersLeft
   end
 
   if y == 21 then
-    game.settings.highlight.enabled = not game.settings.highlight.enabled
+    game.settings.showCandidates = not game.settings.showCandidates
   end
 
   if y == 22 then
-    game.settings.highlight.enabled = true
-    game.settings.highlight.row = not game.settings.highlight.row
+    game.settings.highlight.enabled = not game.settings.highlight.enabled
   end
 
   if y == 23 then
     game.settings.highlight.enabled = true
-    game.settings.highlight.column = not game.settings.highlight.column
+    game.settings.highlight.row = not game.settings.highlight.row
   end
 
   if y == 24 then
     game.settings.highlight.enabled = true
-    game.settings.highlight.square = not game.settings.highlight.square
+    game.settings.highlight.column = not game.settings.highlight.column
   end
 
   if y == 25 then
     game.settings.highlight.enabled = true
-    game.settings.highlight.errors = not game.settings.highlight.errors
+    game.settings.highlight.square = not game.settings.highlight.square
   end
 
   if y == 26 then
+    game.settings.highlight.enabled = true
+    game.settings.highlight.errors = not game.settings.highlight.errors
+  end
+
+  if y == 27 then
     game.settings.highlight.enabled = true
     game.settings.highlight.sameNumber = not game.settings.highlight.sameNumber
   end

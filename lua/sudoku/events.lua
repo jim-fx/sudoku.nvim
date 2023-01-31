@@ -21,7 +21,8 @@ M.actions = {
   "game_restart",
   "game_exit",
   "view_settings",
-  "view_tip"
+  "view_tip",
+  "view_help",
 }
 
 ---@param game Game
@@ -138,7 +139,7 @@ local function handleNewGame(game)
     end
   end
 
-  if game.viewState == "new" or changedCells == 0 then
+  if game.viewState == "new" or changedCells == 0 or game.board.finished then
     core.createNewBoard(game)
     game.viewState = "normal"
   else
@@ -199,14 +200,11 @@ M.setup = function(game)
   end, { buffer = game.bufnr })
 
   vim.keymap.set({ "n" }, "gh", function()
-    game.viewState = (game.viewState == "help") and "normal" or "help"
-    ui.render(game)
-    settings.writeSettings(game);
+    setViewState(game, "help")
   end, { buffer = game.bufnr, desc = "Show sudoku help" })
 
-  vim.keymap.set({ "n" }, "gr", function()
+  vim.keymap.set({ "n" }, "gn", function()
     handleNewGame(game)
-    settings.writeSettings(game);
   end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
 
   vim.keymap.set({ "n" }, "<LeftMouse>", function()

@@ -95,7 +95,6 @@ end
 ---@param board Board
 M.checkBoardValid = function(board)
 
-
   local missingCells = M.totalMissingCells(board);
   local isWon = missingCells == 0;
   if isWon then
@@ -287,6 +286,8 @@ M.createNewBoard = function(game)
   elseif board.difficulty == 2 then
     hidden = sudoku.hideBoard(numbers, 45)
   elseif board.difficulty == 3 then
+    hidden = sudoku.hideBoard(numbers, 50)
+  elseif board.difficulty == 4 then
     hidden = sudoku.hideBoard(numbers, 55)
   end
 
