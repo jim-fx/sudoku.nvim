@@ -1,4 +1,19 @@
+local options = require "sudoku.options"
 local M = {}
+
+---@class HighlighSettings
+---@field enabled boolean
+---@field row boolean
+---@field column boolean
+---@field square boolean
+---@field errors boolean
+---@field sameNumber boolean
+
+---@class Settings
+---@field showNumbersLeft boolean
+---@field showCandidates boolean
+---@field difficulty number
+---@field highlight HighlighSettings
 
 local function drawCheckBox(bool)
   return bool and "☒" or "☐"
@@ -21,7 +36,11 @@ local function write_file(path, content)
   return content
 end
 
+---@param game Game
 M.writeSettings = function(game)
+
+  if not options.get("persist_settings") then return end
+
   local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
 
   local safeFile = {
@@ -32,31 +51,52 @@ M.writeSettings = function(game)
   write_file(settingsFilePath, vim.json.encode(safeFile))
 end
 
+---@param game Game
+---@return Settings
 M.readSettings = function(game)
+
+  local defaultSettings = {
+    showNumbersLeft = false,
+    showCandidates = false,
+    highlight = {
+      enabled = true,
+      row = true,
+      column = true,
+      square = true,
+      errors = false,
+      sameNumber = true
+    },
+    difficulty = 1
+  }
+
+  local persistSettings = options.get("persist_settings")
+  if not persistSettings then
+    return defaultSettings
+  end
 
   local settingsFilePath = vim.fn.stdpath("data") .. "/sudoku-nvim-settings.json";
   local content = read_file(settingsFilePath);
   if not content then
-    return
+    return defaultSettings
   end
 
   local safeFile = vim.json.decode(content);
 
   if safeFile == nil or safeFile == vim.NIL then
-    return
+    return defaultSettings
   end
 
   local settings = safeFile.settings;
   if settings ~= nil then
-    game.settings.showNumbersLeft = settings.showNumbersLeft and true or false;
-    game.settings.showCandidates = settings.showCandidates and true or false;
-    game.settings.highlight.enabled = settings.highlight.enabled and true or false;
-    game.settings.highlight.row = settings.highlight.row and true or false;
-    game.settings.highlight.column = settings.highlight.column and true or false;
-    game.settings.highlight.square = settings.highlight.square and true or false;
-    game.settings.highlight.errors = settings.highlight.errors and true or false;
-    game.settings.highlight.sameNumber = settings.highlight.sameNumber and true or false;
-    game.settings.difficulty = settings.difficulty and settings.difficulty or 1;
+    defaultSettings.showNumbersLeft = settings.showNumbersLeft and true or false;
+    defaultSettings.showCandidates = settings.showCandidates and true or false;
+    defaultSettings.highlight.enabled = settings.highlight.enabled and true or false;
+    defaultSettings.highlight.row = settings.highlight.row and true or false;
+    defaultSettings.highlight.column = settings.highlight.column and true or false;
+    defaultSettings.highlight.square = settings.highlight.square and true or false;
+    defaultSettings.highlight.errors = settings.highlight.errors and true or false;
+    defaultSettings.highlight.sameNumber = settings.highlight.sameNumber and true or false;
+    defaultSettings.difficulty = settings.difficulty and settings.difficulty or 1;
   end
 
   local viewState = safeFile.viewState;
@@ -64,10 +104,13 @@ M.readSettings = function(game)
     game.viewState = safeFile.viewState;
   end
 
+  return defaultSettings
+
 end
 
 
-
+---@param game Game
+---@return table
 M.drawSettings = function(game)
 
   local settings = game.settings;

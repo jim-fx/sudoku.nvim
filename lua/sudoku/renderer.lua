@@ -1,6 +1,4 @@
 local core = require("sudoku.core")
-local util = require("sudoku.util")
-
 local M = {}
 
 M.renderBoard = function(board)

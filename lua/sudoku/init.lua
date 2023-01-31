@@ -1,30 +1,20 @@
-local game = require("sudoku.game")
+local game    = require("sudoku.game")
+local options = require("sudoku.options")
+local events  = require("sudoku.events")
 
 local M = {}
 
-local games = {}
+---@param opts Options
+M.setup = function(opts)
 
-local function createNewSudoku()
-  local newGame = game.init();
-  games[newGame.bufnr] = newGame;
-end
+  options.set(opts);
 
-M.setup = function()
-
-
-  vim.api.nvim_create_user_command("Sudoku", createNewSudoku, {
+  vim.api.nvim_create_user_command("Sudoku", game.init, {
     nargs = "?",
-    complete = function(_, line)
-      vim.notify(line)
-      return { "insert", "clear", "restart" }
+    complete = function()
+      return events.actions
     end
   })
-end
-
-M.insert = function(num)
-
-
-
 end
 
 return M

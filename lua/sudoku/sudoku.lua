@@ -28,11 +28,6 @@ local function isNumberPossible(numbers, cellIndex, num)
   return true;
 end
 
--- print(isNumberPossible({
---   0, 0, 0, 0, 0, 0, 0, 0, 0,
---   1, 0, 0, 0, 0, 0, 0, 0, 0,
--- }, 18, 1))
-
 local function isSolved(numbers)
   for i = 1, 81 do
     if numbers[i] == 0 then

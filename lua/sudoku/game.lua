@@ -6,6 +6,15 @@ local M = {}
 
 local namespace = vim.api.nvim_create_namespace("jim-fx/sudoku.nvim");
 
+---@class Game
+---@field bufnr number
+---@field ns number
+---@field board Board
+---@field boards Board[]
+---@field viewState ViewState
+---@field settings Settings
+---@field __debug boolean
+
 M.init = function()
 
   local buf = ui.setupBuffer();
@@ -14,8 +23,8 @@ M.init = function()
     bufnr = buf,
     ns = namespace,
     board = nil,
-    boards = {},
     viewState = "normal",
+    boards = {},
     settings = {
       showNumbersLeft = false,
       showCandidates = false,

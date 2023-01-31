@@ -3,6 +3,29 @@ local util = require("sudoku.util")
 
 local M = {}
 
+---@class Cell
+---@field number number
+---@field errors string[]
+---@field set number
+---@field show boolean
+---@field candidates number[]
+---@field entropy number
+---@field tip boolean
+---@field __colSet number[]
+---@field __rowSet number[]
+---@field __squareSet number[]
+
+---@class Board
+---@field cells Cell[]
+---@field squares Cell[][]
+---@field rows Cell[][]
+---@field cols Cell[][]
+---@field tips number
+---@field startTime number
+---@field endTime number?
+---@field difficulty number
+
+---@param board Board
 M.getCell = function(board, x, y)
   return board.cells[M.positionToIndex(x, y)]
 end
@@ -26,20 +49,15 @@ M.indexToScreenPosition = function(index)
   return sx, sy
 end
 
-M.setCell = function(board, x, y, number)
-
-  local cellIndex = M.positionToIndex(x, y);
-  -- local numbers = M.boardToNumbers(board);
-  -- local isValid = sudoku.isValidNumber(numbers, cellIndex, number);
-
-  board.cells[cellIndex].set = number
-
-end
-
+---Clears the cell at the given position
+---@param board Board
+---@param x number
+---@param y number
 M.clearCell = function(board, x, y)
   board.cells[M.positionToIndex(x, y)].set = 0;
 end
 
+---@param board Board
 M.boardToNumbers = function(board)
   local numbers = {};
 
@@ -59,6 +77,7 @@ M.boardToNumbers = function(board)
   return numbers
 end
 
+---@param board Board
 M.totalMissingCells = function(board)
   local count = 0
 
@@ -72,6 +91,7 @@ M.totalMissingCells = function(board)
   return count;
 end
 
+---@param board Board
 M.checkBoardValid = function(board)
   for i = 1, 81 do
     board.cells[i].__invalid = false
@@ -79,13 +99,6 @@ M.checkBoardValid = function(board)
   end
 
   local function getCellValue(cell)
-    if board.state == "setup" then
-      if cell.number == 0 then
-        return nil
-      end
-
-      return cell.number
-    end
     return cell.show and cell.number or cell.set
   end
 
@@ -191,46 +204,6 @@ M.checkBoardValid = function(board)
   return valid
 end
 
-M.setupSquare = function(board, cx, cy)
-  local cells = {}
-
-  for i = 1, 9 do
-    -- coordinates relative to square
-    local x = (i - 1) % 3
-    local y = math.floor((i - 1) / 3)
-
-    -- coordinates relative to grid
-    local gx = (cx - 1) * 3 + x + 1
-    local gy = (cy - 1) * 3 + y + 1
-
-    -- global index
-    local index = M.positionToIndex(gx, gy)
-
-    local cell = {
-      number = 0,
-      set = 0,
-      show = false,
-      candidates = {},
-      entropy = 9,
-    }
-
-    if board.rows[gy] == nil then
-      board.rows[gy] = {}
-    end
-    board.rows[gy][gx] = cell
-
-    if board.cols[gx] == nil then
-      board.cols[gx] = {}
-    end
-    board.cols[gx][gy] = cell
-
-    board.cells[index] = cell
-    cells[i] = cell
-  end
-
-  board.squares[(cy - 1) * 3 + cx] = cells
-end
-
 M.getCursorCell = function(game)
   local x, y = util.getPos();
   return M.getCell(game.board, x + 1, y + 1);
@@ -238,6 +211,7 @@ end
 
 M.createNewBoard = function(game)
 
+  ---@type Board
   local board = {
     cells = {},
     squares = {},
@@ -248,16 +222,9 @@ M.createNewBoard = function(game)
     difficulty = game.settings.difficulty,
   }
 
-  for y = 1, 3 do
-    for x = 1, 3 do
-      M.setupSquare(board, x, y)
-    end
-  end
-
   local numbers = sudoku.createBoard()
 
   local hidden = {}
-
   if board.difficulty == 1 then
     hidden = sudoku.hideBoard(numbers, 35)
   elseif board.difficulty == 2 then

@@ -6,7 +6,19 @@ local nvim = vim.api
 
 local M = {}
 
--- highlight line that contains utf8 characters column wise
+---@alias ViewState
+---| '"normal"' # Normal view state'
+---| '"tip"' # Normal view state'
+---| '"help"' # Normal view state'
+---| '"settings"' # Normal view state'
+---| '"restart"' # Normal view state'
+---| '"zen"' # Normal view state'
+
+---@param game Game
+---@param group string
+---@param y number
+---@param x1 number
+---@param x2 number
 local function highlightLine(game, group, y, x1, x2)
 
   local line = vim.api.nvim_buf_get_lines(game.bufnr, y, y + 1, false)[1]
@@ -18,16 +30,25 @@ local function highlightLine(game, group, y, x1, x2)
 
   local _x2 = x2;
   if x2 ~= -1 then
-    _x2 = vim.str_byteindex(line, x2, false);
+    _x2 = vim.str_byteindex(line, x2) --[[@as number]]
+  end
+
+  if _x1 == nil or _x2 == nil then
+    return
   end
 
   vim.api.nvim_buf_add_highlight(game.bufnr, game.ns, group, y, _x1, _x2)
 
 end
 
+---@param game Game
 local function drawWin(game)
 
   local board = game.board;
+
+  if board.endTime == nil then
+    board.endTime = os.time()
+  end
 
   local diff = os.difftime(board.endTime, board.startTime);
   local difficulty = {
@@ -153,6 +174,7 @@ local function drawNumbersLeft(game)
   return { numbersLeftStr }
 end
 
+---@param game Game
 M.render = function(game)
   local board = game.board;
 
@@ -275,7 +297,7 @@ M.render = function(game)
   M.highlight(game)
 end
 
-M.createHighlightGroups = function()
+local function createHighlightGroups()
   vim.cmd("hi SudokuBoard guifg=#7d7d7d")
   vim.cmd("hi SudokuNumber ctermfg=white ctermbg=black guifg=white guibg=black")
   vim.cmd("hi SudokuActiveMenu gui=bold")
@@ -304,7 +326,7 @@ end
 
 M.highlight = function(game)
 
-  M.createHighlightGroups();
+  createHighlightGroups();
 
   local board = game.board;
   nvim.nvim_buf_clear_namespace(game.bufnr, game.ns, 0, -1)

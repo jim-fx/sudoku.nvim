@@ -7,23 +7,6 @@ M.tableConcat = function(t1, t2)
   return t1
 end
 
-local function dump(o)
-  if type(o) == 'table' then
-    local s = '{ '
-    for k, v in pairs(o) do
-      if type(k) ~= 'number' then k = '"' .. k .. '"' end
-      s = s .. '[' .. k .. '] = ' .. dump(v) .. ','
-    end
-    return s .. '}\n '
-  else
-    return "  " .. tostring(o)
-  end
-end
-
-M.dump = function(o)
-  print(dump(o));
-end
-
 M.pickRandom = function(T)
   return T[math.random(#T)]
 end

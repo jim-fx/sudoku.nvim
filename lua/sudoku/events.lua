@@ -6,6 +6,26 @@ local settings = require("sudoku.settings");
 local M = {}
 local nvim = vim.api;
 
+---@enum actions
+M.actions = {
+  "insert_1",
+  "insert_2",
+  "insert_3",
+  "insert_4",
+  "insert_5",
+  "insert_6",
+  "insert_7",
+  "insert_8",
+  "insert_9",
+  "game_new",
+  "game_restart",
+  "game_exit",
+  "view_settings",
+  "view_tip"
+}
+
+
+---@param game Game
 local function handleDelete(game)
   local x, y = util.getPos()
   if x ~= -1 and y ~= -1 and x ~= nil and y ~= nil then
@@ -14,6 +34,8 @@ local function handleDelete(game)
   end
 end
 
+---Clear all cells in the current board
+---@param game Game
 local function handleClear(game)
   local board = game.board;
   for i = 1, 81 do
@@ -24,6 +46,9 @@ local function handleClear(game)
   end
 end
 
+---Insert a number into the specified position
+---@param game Game
+---@param number number
 local function handleInsert(game, number)
   local x, y = util.getPos()
   if x ~= -1 and y ~= -1 then
@@ -42,12 +67,16 @@ local function handleInsert(game, number)
   end
 end
 
+---@param game Game
+---@param state ViewState
 local function setViewState(game, state)
   game.viewState = (game.viewState == state) and "normal" or state;
   ui.render(game)
   settings.writeSettings(game);
 end
 
+---@param game Game
+---@param number number
 local function handleIncrement(game, number)
 
   local cell = core.getCursorCell(game)
@@ -69,6 +98,7 @@ local function handleIncrement(game, number)
   ui.render(game)
 end
 
+---@param game Game
 local function handleShowTip(game)
 
   if game.viewState == "tip" then
@@ -99,6 +129,7 @@ local function handleShowTip(game)
 
 end
 
+---@param game Game
 local function handleRestart(game)
 
   local changedCells = 0;
