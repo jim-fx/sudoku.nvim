@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/logo.svg?token=GHSAT0AAAAAAB52IBTQVAX3GWH7MTDH3JCAY6WZLFQ" alt="sudoku.nvim" width="50%" margin="25%"/>
+<img src="./.repo/logo.svg" alt="sudoku.nvim" width="50%" margin="25%"/>
 </p>
 
 <p align="center">
@@ -13,7 +13,6 @@
 -   [Installation](#installation)
 -   [Screenshots](#screenshots)
 -   [Configuration](#configuration)
--   [Contributing](#contributing)
 
 ## Installation
 
@@ -36,7 +35,7 @@ Install with <code><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></c
 ## Screenshots
 |                                                                                                                                                        |                                                                                                                                                  |                                                                                                                                        |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------: |
-|           <img alt="Main window" src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_04.jpg?token=GHSAT0AAAAAAB52IBTRRLS6ZBKVEY2RZ6LAY6XHWVA">           |                 <img src="https://raw.githubusercontent.com/jim-fx/sudoku.nvim/main/.repo/render_05.jpg?token=GHSAT0AAAAAAB52IBTQ4D3JRBENMU4MHFHIY6XHWVA">                 | |
+|           <img alt="Main window" src="./.repo/render_04.jpg">           |                 <img src="./.repo/render_05.jpg">                 | |
 
 ## Configuration
 
