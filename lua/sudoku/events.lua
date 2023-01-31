@@ -113,8 +113,9 @@ local function handleShowTip(game)
     local shuffledCells = util.shuffle(game.board.cells)
     for i = 1, 81 do
       local c = shuffledCells[i]
-      if c.entropy == 1 and c.show == false then
+      if c.entropy == 1 and c.show == false and c.set ~= 0 then
         cell = c
+        vim.notify(vim.inspect(cell));
         break
       end
     end
@@ -188,7 +189,7 @@ end
 M.setup = function(game)
 
   nvim.nvim_buf_create_user_command(game.bufnr, "Sudoku", function()
-    print("Sudoku command")
+    -- print("Sudoku command")
   end, {});
 
   vim.keymap.set({ "n" }, "+", function()
