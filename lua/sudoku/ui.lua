@@ -57,7 +57,8 @@ local function drawWin(game)
   local difficulty = {
     "easy",
     "medium",
-    "hard"
+    "hard",
+    "impossible"
   }
 
   return {
