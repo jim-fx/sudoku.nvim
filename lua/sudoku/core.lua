@@ -1,5 +1,6 @@
 local sudoku = require("sudoku.sudoku")
 local util = require("sudoku.util")
+local history = require("sudoku.history")
 
 local M = {}
 
@@ -18,6 +19,7 @@ local M = {}
 ---@class Board
 ---@field finished boolean
 ---@field cells Cell[]
+---@field history BoardHistory
 ---@field squares Cell[][]
 ---@field rows Cell[][]
 ---@field cols Cell[][]
@@ -26,9 +28,38 @@ local M = {}
 ---@field endTime number?
 ---@field difficulty number
 
+---@class BoardHistory
+---@field steps number[][]
+---@field index number
+
 ---@param board Board
 M.getCell = function(board, x, y)
   return board.cells[M.positionToIndex(x, y)]
+end
+
+local function getCursorIndex()
+  local x, y = util.getPos()
+  return M.positionToIndex(x + 1, y + 1)
+end
+
+M.setCursorCellValue = function(board, value)
+  return M.setCellValue(board, getCursorIndex(), value)
+end
+
+---comment
+---@param board any
+---@param index any
+---@param value any
+---@return Cell | nil
+M.setCellValue = function(board, index, value)
+  local cell = board.cells[index]
+  if cell == nil then
+    return
+  end
+  local currentValue = board.cells[index].set
+  board.cells[index].set = value
+  history.addBoardStep(board, index, currentValue, value)
+  return cell;
 end
 
 M.positionToIndex = function(x, y)
@@ -55,7 +86,7 @@ end
 ---@param x number
 ---@param y number
 M.clearCell = function(board, x, y)
-  board.cells[M.positionToIndex(x, y)].set = 0;
+  return M.setCellValue(board, M.positionToIndex(x, y), 0)
 end
 
 ---@param board Board
@@ -91,6 +122,14 @@ M.totalMissingCells = function(board)
 
   return count;
 end
+
+---@param board Board
+---@return Cell
+M.getCursorCell = function(board)
+  local x, y = util.getPos();
+  return M.getCell(board, x + 1, y + 1);
+end
+
 
 ---@param board Board
 M.checkBoardValid = function(board)
@@ -212,10 +251,6 @@ M.checkBoardValid = function(board)
   return valid
 end
 
-M.getCursorCell = function(game)
-  local x, y = util.getPos();
-  return M.getCell(game.board, x + 1, y + 1);
-end
 
 
 local function setupSquare(board, cx, cy)
@@ -265,6 +300,10 @@ M.createNewBoard = function(game)
     finished = false,
     cells = {},
     squares = {},
+    history = {
+      index = 0,
+      steps = {},
+    },
     rows = {},
     cols = {},
     tips = 0,

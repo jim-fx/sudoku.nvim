@@ -101,11 +101,13 @@ local function drawHelp()
     "[r1..r9] -> Insert a number",
     "[x]      -> Clear a cell",
     "[gn]     -> Start a new game",
+    "[gc]     -> Clear board",
+    "[C-r]    -> Redo",
+    "[u]      -> Undo",
     "[gr]     -> Restart the game",
     "[gh]     -> Show help",
     "[gt]     -> Show a tip",
     "[gs]     -> Show settings",
-    "[gc]     -> Clear board",
     "[gz]     -> Zen Mode"
   }
 end
@@ -129,9 +131,11 @@ local function drawNewGame(game)
   }
 end
 
+---@param game Game
+---@return string[]
 local function drawCellCandidates(game)
 
-  local cell = core.getCursorCell(game);
+  local cell = core.getCursorCell(game.board);
 
   if cell == nil then
     return {}
