@@ -13,6 +13,8 @@
 -   [Installation](#installation)
 -   [Screenshots](#screenshots)
 -   [Configuration](#configuration)
+-   [Mappings](#mappings)
+-   [Commands](#commands)
 
 ## Installation
 
@@ -60,6 +62,8 @@ require("sudoku").setup({
       { key = "r1",    action = "insert=1" },
       { key = "r2",    action = "insert=2" },
       { key = "r3",    action = "insert=3" },
+      -- ...
+      { key = "r9",    action = "insert=9" },
       { key = "gn",    action = "new_game" },
       { key = "gr",    action = "reset_game" },
       { key = "gs",    action = "view=settings" },
@@ -72,5 +76,41 @@ require("sudoku").setup({
       { key = "-",     action = "decrement" },
   }
 })
+```
+
+## Mappings
+
+You can see all the default mappings in the configuration settings. If you want to define your own you can either do it with the config, for example if you would like to use `c` to clear a cell you would set:
+
+```lua
+require("sudoku").setup({
+    mappings = {
+        { key = "c", action = "clear_cell" }
+    }
+})
+```
+
+You can also just use `vim.keymap.set` (this will create keymaps for all buffers, not just for the ones that contain the sudoku board)
+
+```lua
+vim.keymap.set("n", "c", ":Sudoku clear_cell")
+-- or
+vim.keymap.set("n", "c", function() require("sudoku").setCell(0) end)
+```
+
+## Commands
+
+All the actions you can see in the default mappings are also available as commands, eg:
+
+```vim
+:Sudoku insert=1
+:Sudoku insert=2
+...
+:Sudoku insert=3
+:Sudoku new_game
+:Sudoku view=help
+:Sudoku view=settings
+:Sudoku view=tip
+:Sudoku reset_game
 ```
 
