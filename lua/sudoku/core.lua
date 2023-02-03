@@ -46,18 +46,35 @@ M.setCursorCellValue = function(board, value)
   return M.setCellValue(board, getCursorIndex(), value)
 end
 
+---@param board Board
+---@param cell Cell
+---@return number | nil
+M.getCellIndex = function(board, cell)
+
+  local index = nil;
+
+  for i = 1, 81 do
+    if board.cells[i] == cell then
+      index = i;
+      break;
+    end
+  end
+
+  return index;
+end
+
 ---comment
----@param board any
----@param index any
----@param value any
+---@param board Board
+---@param index  integer
+---@param value number
 ---@return Cell | nil
 M.setCellValue = function(board, index, value)
-  local cell = board.cells[index]
+  local cell = board.cells[index];
   if cell == nil then
     return
   end
-  local currentValue = board.cells[index].set
-  board.cells[index].set = value
+  local currentValue = cell.set
+  cell.set = value
   history.addBoardStep(board, index, currentValue, value)
   return cell;
 end

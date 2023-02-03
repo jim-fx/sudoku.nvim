@@ -3,45 +3,46 @@ local ui       = require("sudoku.ui");
 local util     = require("sudoku.util");
 local settings = require("sudoku.settings");
 local history  = require("sudoku.history")
+local options  = require("sudoku.options")
 
 local M = {}
 local nvim = vim.api;
 
 ---@enum actions
 M.actions = {
-  ["insert_1"] = {
+  ["insert=1"] = {
     key = "r1",
     description = "Set the value of the cell under the cursor to 1"
   },
-  ["insert_2"] = {
+  ["insert=2"] = {
     key = "r2",
     description = "Set the value of the cell under the cursor to 2"
   },
-  ["insert_3"] = {
+  ["insert=3"] = {
     key = "r3",
     description = "Set the value of the cell under the cursor to 3"
   },
-  ["insert_4"] = {
+  ["insert=4"] = {
     key = "r4",
     description = "Set the value of the cell under the cursor to 4"
   },
-  ["insert_5"] = {
+  ["insert=5"] = {
     key = "r5",
     description = "Set the value of the cell under the cursor to 5"
   },
-  ["insert_6"] = {
+  ["insert=6"] = {
     key = "r6",
     description = "Set the value of the cell under the cursor to 6"
   },
-  ["insert_7"] = {
+  ["insert=7"] = {
     key = "r7",
     description = "Set the value of the cell under the cursor to 7"
   },
-  ["insert_8"] = {
+  ["insert=8"] = {
     key = "r8",
     description = "Set the value of the cell under the cursor to 8"
   },
-  ["insert_9"] = {
+  ["insert=9"] = {
     key = "r9",
     description = "Set the value of the cell under the cursor to 9"
   },
@@ -49,29 +50,33 @@ M.actions = {
     key = "x",
     description = "Clear the cell under the cursor"
   },
-  ["game_new"] = {
+  ["new_game"] = {
     key = "gn",
     description = "New sudoku board"
   },
-  ["game_reset"] = {
+  ["reset_game"] = {
     key = "gr",
     description = "Reset sudoku board"
   },
-  ["game_exit"] = {
+  ["exit"] = {
     key = "gq",
     description = "Exit game"
   },
-  ["view_settings"] = {
+  ["view=settings"] = {
     key = "gs",
     description = "Show settings"
   },
-  ["view_tip"] = {
+  ["view=tip"] = {
     key = "gt",
     description = "Show tip"
   },
-  ["view_help"] = {
+  ["view=help"] = {
     key = "gh",
     description = "Show help"
+  },
+  ["view=zen"] = {
+    key = "gz",
+    description = "Enter zen mode"
   },
   ["undo"] = {
     key = "u",
@@ -80,22 +85,28 @@ M.actions = {
   ["redo"] = {
     key = "<C-r>",
     description = "Redo last action"
+  },
+  ["increment"] = {
+    key = "+",
+    description = "Increment the value of the cell under the cursor"
+  },
+  ["decrement"] = {
+    key = "-",
+    description = "Decrement the value of the cell under the cursor"
   }
 }
 
-
 ---@param game Game
-local function handleDelete(game)
+local function handleClear(game)
   local x, y = util.getPos()
   if x ~= -1 and y ~= -1 and x ~= nil and y ~= nil then
     core.clearCell(game.board, x + 1, y + 1)
-    ui.render(game)
   end
 end
 
 ---Clear all cells in the current board
 ---@param game Game
-local function handleClear(game)
+local function handleReset(game)
   local board = game.board;
   for i = 1, 81 do
     board.cells[i].set = 0
@@ -123,15 +134,12 @@ local function handleInsert(game, cellValue)
       game.viewState = "normal"
     end
   end
-
-  ui.render(game)
 end
 
 ---@param game Game
 ---@param state ViewState
 local function setViewState(game, state)
   game.viewState = (game.viewState == state) and "normal" or state;
-  ui.render(game)
   settings.writeSettings(game);
 end
 
@@ -162,7 +170,6 @@ local function handleIncrement(game, number)
   end
   core.setCursorCellValue(game.board, newCellValue);
 
-  ui.render(game)
 end
 
 ---@param game Game
@@ -215,7 +222,6 @@ local function handleNewGame(game)
     game.viewState = "new"
   end
 
-  ui.render(game)
 end
 
 ---@param game Game
@@ -252,26 +258,90 @@ local function handleMouseClick(game)
 
 end
 
+---@param game Game
+---@param actionId string
+M.handleAction = function(game, actionId)
+
+  if string.sub(actionId, 0, 6) == "insert" then
+
+    if string.sub(actionId, 0, 7) ~= "insert=" then
+      print("Sudoku: insert command requires a number, eg: insert=2")
+      return
+    end
+
+    local string_value = string.gsub(actionId, "insert=", "")
+    local value = tonumber(string_value)
+    if value == nil then
+      print("Sudoku: insert command requires a number, eg: insert=2")
+      return
+    end
+    value = math.max(1, math.min(value, 9));
+    -- convert string to integer:
+    handleInsert(game, value);
+  elseif string.sub(actionId, 0, 4) == "view" then
+    if string.sub(actionId, 0, 5) ~= "view=" then
+      print("Sudoku: view command requires a view name, eg: view=help")
+    end
+
+    local view = string.gsub(actionId, "view=", "")
+
+    if view == "help" then
+      setViewState(game, "help")
+    elseif view == "tip" then
+      handleShowTip(game)
+    elseif view == "settings" then
+      setViewState(game, "settings")
+    elseif view == "normal" then
+      setViewState(game, "normal")
+    elseif view == "zen" then
+      setViewState(game, "zen")
+    else
+      print("Sudoku: unknown view: " .. view)
+    end
+
+  elseif actionId == "clear_cell" then
+    if game.viewState == "settings" then
+      settings.handleToggleSetting(game)
+    end
+    handleClear(game)
+  elseif actionId == "new_game" then
+    handleNewGame(game)
+  elseif actionId == "reset_game" then
+    handleReset(game)
+  elseif actionId == "exit" then
+  elseif actionId == "undo" then
+    history.undoBoardStep(game.board)
+  elseif actionId == "redo" then
+    history.redoBoardStep(game.board)
+  elseif actionId == "increment" then
+    handleIncrement(game, 1)
+  elseif actionId == "decrement" then
+    handleIncrement(game, -1)
+  else
+    print("Sudoku: unknown action: " .. actionId)
+  end
+
+  ui.render(game)
+
+end
+
 M.setup = function(game)
 
-  vim.keymap.set({ "n" }, "+", function()
-    handleIncrement(game, 1)
-  end, { buffer = game.bufnr })
+  local custom_mappings = {};
+  for _, value in pairs(options.get("mappings") or {}) do
+    custom_mappings[value.action] = value.key;
+  end
 
-  vim.keymap.set({ "n" }, "-", function()
-    handleIncrement(game, -1)
-  end, { buffer = game.bufnr })
-
-  vim.keymap.set({ "n" }, "gh", function()
-    setViewState(game, "help")
-  end, { buffer = game.bufnr, desc = "Show sudoku help" })
-
-  vim.keymap.set({ "n" }, "gn", function()
-    handleNewGame(game)
-  end, { buffer = game.bufnr, desc = "Start a new sudoku board" })
+  for actionId, value in pairs(M.actions) do
+    local key = custom_mappings[actionId] and custom_mappings[actionId] or value.key--[[@as string]] ;
+    vim.keymap.set({ "n" }, key, function()
+      M.handleAction(game, actionId);
+    end, { buffer = game.bufnr, desc = value.description })
+  end
 
   vim.keymap.set({ "n" }, "<LeftMouse>", function()
     handleMouseClick(game)
+    ui.render(game)
   end, { buffer = game.bufnr, desc = "Insert clicked number" })
 
   vim.keymap.set({ "n" }, "gd3b", function()
@@ -279,50 +349,8 @@ M.setup = function(game)
     ui.render(game)
   end, { buffer = game.bufnr, desc = "Enter secret d3bug mode" })
 
-  vim.keymap.set({ "n" }, "gt", function()
-    handleShowTip(game)
-    ui.render(game)
-  end, { buffer = game.bufnr, desc = "Show a sudoku tip" })
-
-  vim.keymap.set({ "n" }, "gc", function()
-    handleClear(game)
-    ui.render(game)
-  end, { buffer = game.bufnr, desc = "Clear Sudoku board" })
-
-  vim.keymap.set({ "n" }, "gz", function()
-    setViewState(game, "zen")
-  end, { buffer = game.bufnr, desc = "Enter sudoku zen mode" })
-
-  vim.keymap.set({ "n" }, "gs", function()
-    setViewState(game, "settings");
-  end, { buffer = game.bufnr, desc = "Enter sudoku settings mode" })
-
-  vim.keymap.set({ "n" }, "u", function()
-    history.undoBoardStep(game.board);
-    ui.render(game)
-  end, { buffer = game.bufnr, desc = "Undo board step" })
-
-  vim.keymap.set({ "n" }, "<C-r>", function()
-    history.redoBoardStep(game.board);
-    ui.render(game)
-  end, { buffer = game.bufnr, desc = "Redo board step" })
-
-  vim.keymap.set({ "n" }, "x", function()
-    if game.viewState == "settings" then
-      settings.handleToggleSetting(game)
-    end
-    handleDelete(game)
-    ui.render(game)
-  end, { buffer = game.bufnr, desc = "Clear sudoku cell" })
-
-  for i = 1, 9 do
-    vim.keymap.set({ "n" }, "r" .. tostring(i), function()
-      handleInsert(game, i)
-    end, { buffer = game.bufnr, desc = "Insert " .. i .. " into sudoku" })
-  end
-
   nvim.nvim_create_autocmd("CursorMoved", {
-    group = vim.api.nvim_create_augroup("render-asd", { clear = true }),
+    group = vim.api.nvim_create_augroup("jim-fx/sudoku.nvim", { clear = true }),
     callback = function()
       ui.render(game)
     end,

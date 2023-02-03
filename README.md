@@ -17,7 +17,13 @@
 Install with <code><a href="https://github.com/wbthomason/packer.nvim">Packer</a></code>
 ```lua
 use {
-  'jim-fx/sudoku.nvim'
+  'jim-fx/sudoku.nvim',
+  cmd = "Sudoku",
+  config = function()
+    require("sudoku").setup({
+      -- configuration ...
+    })
+  end
 }
 ```
 
@@ -26,7 +32,11 @@ Install with <code><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></c
 {
   'jim-fx/sudoku.nvim',
   cmd = "Sudoku",
-  config = true
+  config = function()
+    require("sudoku").setup({
+      -- configuration ...
+    })
+  end
 }
 ```
 
@@ -42,7 +52,23 @@ Install with <code><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a></c
 require("sudoku").setup({
   persist_settings = true, -- safe the settings under vim.fn.stdpath("data"), usually ~/.local/share/nvim,
   persist_games = true, -- persist a history of all played games
-  default_mappings = true, -- if set to false you need to set your own,
+  default_mappings = true, -- if set to false you need to set your own, like the following:
+  mappings = {
+      { key = "x",     action = "clear_cell" },
+      { key = "r1",    action = "insert=1" },
+      { key = "r2",    action = "insert=2" },
+      { key = "r3",    action = "insert=3" },
+      { key = "gn",    action = "new_game" },
+      { key = "gr",    action = "reset_game" },
+      { key = "gs",    action = "view=settings" },
+      { key = "gt",    action = "view=tip" },
+      { key = "gz",    action = "view=zen" },
+      { key = "gh",    action = "view=help" },
+      { key = "u",     action = "undo" },
+      { key = "<C-r>", action = "redo" },
+      { key = "+",     action = "increment" },
+      { key = "-",     action = "decrement" },
+  }
 })
 ```
 

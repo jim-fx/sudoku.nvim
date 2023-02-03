@@ -320,7 +320,7 @@ local function createHighlightGroups()
   vim.cmd("hi SudokuError guibg=#843434");
 end
 
-M.setupBuffer = function()
+M.createNewBuffer = function()
   -- Create new empty buffer
   local buf = nvim.nvim_call_function("bufnr", { "Sudoku" })
   if buf == -1 then
