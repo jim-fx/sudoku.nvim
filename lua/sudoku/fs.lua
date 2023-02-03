@@ -8,7 +8,6 @@ local function read_file(path)
   local content = file:read "*a" -- *a or *all reads the whole file
   file:close()
 
-
   local jsonData = vim.json.decode(content);
   if jsonData == nil or jsonData == vim.NIL then
     return nil

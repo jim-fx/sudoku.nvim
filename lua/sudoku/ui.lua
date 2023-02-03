@@ -127,7 +127,7 @@ local function drawNewGame(game)
   return {
     "You have changed " .. changedCells .. " cell" ..
         (changedCells > 1 and "s" or "") .. ", are you sure you want to start a new game?",
-    "[n]ew [c]ancel"
+    "[gn]new [gc]cancel"
   }
 end
 

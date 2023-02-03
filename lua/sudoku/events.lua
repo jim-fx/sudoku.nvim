@@ -54,6 +54,10 @@ M.actions = {
     key = "gn",
     description = "New sudoku board"
   },
+  ["cancel_new_game"] = {
+    key = "gc",
+    description = "Cancel new game"
+  },
   ["reset_game"] = {
     key = "gr",
     description = "Reset sudoku board"
@@ -306,6 +310,8 @@ M.handleAction = function(game, actionId)
     handleClear(game)
   elseif actionId == "new_game" then
     handleNewGame(game)
+  elseif actionId == "cancel_new_game" then
+    setViewState(game, "normal")
   elseif actionId == "reset_game" then
     handleReset(game)
   elseif actionId == "exit" then
