@@ -8,6 +8,8 @@
     <br />Now presenting: <a href="https://github.com/jim-fx/sudoku.nvim"><code>sudoku.nvim</code></a>
 </p>
 
+## Table of Content
+
 -   [Installation](#installation)
 -   [Screenshots](#screenshots)
 -   [Configuration](#configuration)
