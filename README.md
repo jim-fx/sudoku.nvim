@@ -4,7 +4,7 @@
 
 <p align="center">
     Since using neovim have you become a coding ninja, a keyboard warrior a programming wizard? <br /> 
-    Are you so fast that you now have time to spend outside of your terminal?<br />
+    Are you so <i>blazingly</i> fast that you now have time to spend outside of your terminal?<br />
     <br />Now presenting: <a href="https://github.com/jim-fx/sudoku.nvim"><code>sudoku.nvim</code></a>
 </p>
 
