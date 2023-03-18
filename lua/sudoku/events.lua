@@ -194,7 +194,6 @@ local function handleShowTip(game)
       local c = shuffledCells[i]
       if c.entropy == 1 and c.show == false and c.set ~= 0 then
         cell = c
-        vim.notify(vim.inspect(cell));
         break
       end
     end
