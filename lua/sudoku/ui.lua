@@ -1,12 +1,13 @@
-local renderer = require("sudoku.renderer")
-local util     = require("sudoku.util")
-local core     = require("sudoku.core")
-local settings = require("sudoku.settings")
-local history  = require("sudoku.history")
-local options  = require("sudoku.options")
-local nvim     = vim.api
+local renderer  = require("sudoku.renderer")
+local util      = require("sudoku.util")
+local core      = require("sudoku.core")
+local settings  = require("sudoku.settings")
+local history   = require("sudoku.history")
+local options   = require("sudoku.options")
+local highlight = require("sudoku.highlight")
+local nvim      = vim.api
 
-local M = {}
+local M         = {}
 
 ---@alias ViewState
 ---| '"normal"' # Normal view state'
@@ -23,7 +24,6 @@ local M = {}
 ---@param x1 number
 ---@param x2 number
 local function highlightLine(game, group, y, x1, x2)
-
   local line = vim.api.nvim_buf_get_lines(game.bufnr, y, y + 1, false)[1]
   if line == nil then
     return
@@ -41,12 +41,10 @@ local function highlightLine(game, group, y, x1, x2)
   end
 
   vim.api.nvim_buf_add_highlight(game.bufnr, game.ns, group, y, _x1, _x2)
-
 end
 
 ---@param game Game
 local function drawWin(game)
-
   local board = game.board;
 
   if board.endTime == nil then
@@ -71,7 +69,6 @@ local function drawWin(game)
 end
 
 local function drawUI(game)
-
   local viewState = game.viewState;
   local lines = {
     "",
@@ -113,7 +110,6 @@ local function drawHelp()
 end
 
 local function drawNewGame(game)
-
   local board = game.board;
 
   local changedCells = 0;
@@ -126,7 +122,7 @@ local function drawNewGame(game)
 
   return {
     "You have changed " .. changedCells .. " cell" ..
-        (changedCells > 1 and "s" or "") .. ", are you sure you want to start a new game?",
+    (changedCells > 1 and "s" or "") .. ", are you sure you want to start a new game?",
     "[gn]new [gc]cancel"
   }
 end
@@ -134,7 +130,6 @@ end
 ---@param game Game
 ---@return string[]
 local function drawCellCandidates(game)
-
   local cell = core.getCursorCell(game.board);
 
   if cell == nil then
@@ -150,11 +145,9 @@ local function drawCellCandidates(game)
   end
 
   return { canidateLine }
-
 end
 
 local function drawNumbersLeft(game)
-
   local numbersLeft = {};
   local board = game.board;
 
@@ -232,7 +225,6 @@ M.render = function(game)
 
 
   if game.viewState == "tip" then
-
     local tipCell = nil;
     for i = 1, 81 do
       local cell = board.cells[i]
@@ -247,7 +239,6 @@ M.render = function(game)
     else
       lines = util.tableConcat(lines, { "Could not find a tip" });
     end
-
   end
 
 
@@ -271,7 +262,6 @@ M.render = function(game)
 
     local cell = core.getCell(board, x + 1, y + 1);
     if cell ~= nil then
-
       local cellLine = "cell: " .. (cell.number or cell.set) .. "show: " .. (cell.show and "true" or "false");
 
 
@@ -282,7 +272,6 @@ M.render = function(game)
       end
 
       lines = util.tableConcat(lines, { cellLine });
-
     end
 
     lines = util.tableConcat(lines, { "viewState: " .. game.viewState });
@@ -296,7 +285,6 @@ M.render = function(game)
       candidateLine = "Candidates: " .. candidateLine .. " #" .. util.tableLength(candidates)
       lines = util.tableConcat(lines, { candidateLine });
     end
-
   end
 
   nvim.nvim_buf_set_option(game.bufnr, "modifiable", true)
@@ -304,20 +292,6 @@ M.render = function(game)
   nvim.nvim_buf_set_option(game.bufnr, "modifiable", false)
 
   M.highlight(game)
-end
-
-local function createHighlightGroups()
-  vim.cmd("hi SudokuBoard guifg=#7d7d7d")
-  vim.cmd("hi SudokuNumber ctermfg=white ctermbg=black guifg=white guibg=black")
-  vim.cmd("hi SudokuActiveMenu gui=bold")
-  vim.cmd("hi SudokuHintCell ctermbg=yellow guibg=yellow")
-  vim.cmd("hi SudokuSquare guibg=#292b35 guifg=#ffffff");
-  vim.cmd("hi SudokuColumn guibg=#14151a guifg=#d5d5d5");
-  vim.cmd("hi SudokuRow guibg=#14151a guifg=#d5d5d5");
-  vim.cmd("hi SudokuSettingsDisabled gui=italic guifg=#8e8e8e");
-  vim.cmd("hi SudokuSameNumber gui=bold guifg=white");
-  vim.cmd("hi SudokuSetNumber gui=italic guifg=white");
-  vim.cmd("hi SudokuError guibg=#843434");
 end
 
 M.createNewBuffer = function()
@@ -334,8 +308,7 @@ end
 
 
 M.highlight = function(game)
-
-  createHighlightGroups();
+  highlight.createHighlightGroups();
 
   local board = game.board;
   nvim.nvim_buf_clear_namespace(game.bufnr, game.ns, 0, -1)
@@ -384,7 +357,6 @@ M.highlight = function(game)
           highlightLine(game, "SudokuSettingsDisabled", 20 + i, 0, -1);
         end
       end
-
     end
     if game.viewState == "help" then
       highlightLine(game, "SudokuActiveMenu", 5, 27, 42);
@@ -440,7 +412,6 @@ M.highlight = function(game)
         end
       end
     end
-
   end
 
   -- highlight square
@@ -464,8 +435,8 @@ M.highlight = function(game)
       end
     end
   end
-
 end
 
 
 return M
+
