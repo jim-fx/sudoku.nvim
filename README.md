@@ -111,6 +111,17 @@ vim.keymap.set("n", "c", ":Sudoku clear_cell")
 vim.keymap.set("n", "c", function() require("sudoku").setCell(0) end)
 ```
 
+   
+> [!TIP]
+> You could add the following mappings to make it easier to jump between squares
+> ```lua
+> -- ftplugin/sudoku.lua
+> vim.keymap.set("n", "<C-l>", "8l")
+> vim.keymap.set("n", "<C-h>", "8h")
+> vim.keymap.set("n", "<C-k>", "4k")
+> vim.keymap.set("n", "<C-j>", "4j")
+> ```
+
 ## Commands
 
 All the actions you can see in the default mappings are also available as commands, eg:
